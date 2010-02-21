@@ -256,7 +256,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNoImmediateEffect,                         //203 SPELL_AURA_MOD_ATTACKER_MELEE_CRIT_DAMAGE  implemented in Unit::CalculateMeleeDamage and Unit::SpellCriticalDamageBonus
     &Aura::HandleNoImmediateEffect,                         //204 SPELL_AURA_MOD_ATTACKER_RANGED_CRIT_DAMAGE implemented in Unit::CalculateMeleeDamage and Unit::SpellCriticalDamageBonus
     &Aura::HandleNoImmediateEffect,                         //205 SPELL_AURA_MOD_ATTACKER_SPELL_CRIT_DAMAGE  implemented in Unit::SpellCriticalDamageBonus
-    &Aura::HandleNULL,                                      //206 SPELL_AURA_MOD_SPEED_MOUNTED
+    &Aura::HandleAuraModIncreaseFlightSpeed,                //206 SPELL_AURA_MOD_SPEED_MOUNTED
     &Aura::HandleAuraModIncreaseFlightSpeed,                //207 SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED
     &Aura::HandleAuraModIncreaseFlightSpeed,                //208 SPELL_AURA_MOD_SPEED_FLIGHT, used only in spell: Flight Form (Passive)
     &Aura::HandleAuraModIncreaseFlightSpeed,                //209 SPELL_AURA_MOD_FLIGHT_SPEED_ALWAYS
@@ -1080,6 +1080,9 @@ void Aura::_AddAura()
             // Enrage aura state
             if(m_spellProto->Dispel == DISPEL_ENRAGE)
                 m_target->ModifyAuraState(AURA_STATE_ENRAGE, true);
+			//if (m_spellProto->Mechanic == MECHANIC_BLEED)
+			if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED - 1)))
+				m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, true);
         }
     }
 }
@@ -1197,6 +1200,22 @@ bool Aura::_RemoveAura()
                 if(m_spellProto->SpellFamilyFlags & UI64LIT(0x1000000000000000))
                     removeState = AURA_STATE_FAERIE_FIRE;   // Sting (hunter versions)
         }
+
+		if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED - 1)))
+		{
+			bool found = false;
+			Unit::AuraList const& mPerDmg = m_target->GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
+			for(Unit::AuraList::const_iterator i = mPerDmg.begin(); i != mPerDmg.end(); ++i)
+			{
+				if(GetAllSpellMechanicMask((*i)->m_spellProto) & (1 << (MECHANIC_BLEED - 1)))
+				{
+					found = true;
+					break;
+				}
+			}
+			if(!found)
+				m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, false);
+		}
 
         // Remove state (but need check other auras for it)
         if (removeState)
@@ -3026,6 +3045,9 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
         case FORM_DEFENSIVESTANCE:
             PowerType = POWER_RAGE;
             break;
+		case FORM_SHADOW_DANCE:
+			PowerType = POWER_ENERGY;
+			break;
         default:
             break;
     }
@@ -3083,7 +3105,9 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
         if(m_target->m_ShapeShiftFormSpellId)
             m_target->RemoveAurasDueToSpell(m_target->m_ShapeShiftFormSpellId, this);
 
-        m_target->SetByteValue(UNIT_FIELD_BYTES_2, 3, form);
+        //m_target->SetByteValue(UNIT_FIELD_BYTES_2, 3, form);
+		// For Shadow Dance we must apply Stealth form (30) instead of current (13)
+		m_target -> SetByteValue ( UNIT_FIELD_BYTES_2 , 3 , ( form == FORM_SHADOW_DANCE ) ? uint8 ( FORM_STEALTH ) : form );
 
         if(modelid > 0)
             m_target->SetDisplayId(modelid);
@@ -3152,6 +3176,11 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
                         m_target->SetPower(POWER_RAGE, Rage_val);
                     break;
                 }
+
+				case FORM_SHADOW_DANCE:
+					m_target->SetStandFlags(UNIT_STAND_FLAGS_CREEP);
+					break;
+
                 default:
                     break;
             }
@@ -3192,6 +3221,9 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
                 if(Aura* dummy = m_target->GetDummyAura(37324) )
                     m_target->CastSpell(m_target, 37325, true, NULL, dummy);
                 break;
+			case FORM_SHADOW_DANCE:
+				m_target->RemoveStandFlags(UNIT_STAND_FLAGS_CREEP);
+				break;
             default:
                 break;
         }
