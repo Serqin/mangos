@@ -15,3 +15,5 @@
 VC80
 VC90
 *.sln
+*.suo
+*.ncb
