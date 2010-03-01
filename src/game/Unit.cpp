@@ -388,8 +388,8 @@ void Unit::SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, SplineTy
             data << float(0);
             data << float(0);
             break;
-        case SPLINETYPE_FACINGTARGET:                       // not used currently
-            data << uint64(0);                              // probably target guid (facing target?)
+        case SPLINETYPE_FACINGTARGET:
+            data << uint64(m_InteractionObject);            // set in SetFacingToObject()
             break;
         case SPLINETYPE_FACINGANGLE:                        // not used currently
             data << float(0);                               // facing angle
@@ -3513,6 +3513,24 @@ void Unit::SetFacingTo(float ori)
     WorldPacket data;
     BuildHeartBeatMsg(&data);
     SendMessageToSet(&data, false);
+}
+
+// Consider move this to Creature:: since only creature appear to be able to use this
+void Unit::SetFacingToObject(WorldObject* pObject)
+{
+    if (GetTypeId() != TYPEID_UNIT)
+        return;
+
+    // never face when already moving
+    if (!IsStopped())
+        return;
+
+    m_InteractionObject = pObject->GetGUID();
+
+    // TODO: figure out under what conditions creature will move towards object instead of facing it where it currently is.
+
+    SetOrientation(GetAngle(pObject));
+    SendMonsterMove(GetPositionX(), GetPositionY(), GetPositionZ(), SPLINETYPE_FACINGTARGET, ((Creature*)this)->GetSplineFlags(), 0);
 }
 
 bool Unit::isInAccessablePlaceFor(Creature const* c) const
@@ -6886,15 +6904,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
-            // Blood Aura
-            if (dummySpell->SpellIconID == 2636)
-            {
-                if (GetTypeId() != TYPEID_PLAYER || !((Player*)this)->isHonorOrXPTarget(pVictim))
-                    return false;
-                basepoints[0] = triggerAmount * damage / 100;
-                triggered_spell_id = 53168;
-                break;
-            }
             // Butchery
             if (dummySpell->SpellIconID == 2664)
             {
@@ -7670,22 +7679,20 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                         return false;
                 }
             }
-            // Blood Presence
-            else if (auraSpellInfo->Id == 48266)
-            {
-                if (GetTypeId() != TYPEID_PLAYER)
-                    return false;
-                if (!((Player*)this)->isHonorOrXPTarget(pVictim))
-                    return false;
-                trigger_spell_id = 50475;
-                basepoints[0] = damage * triggerAmount / 100;
-            }
             // Blade Barrier
             else if (auraSpellInfo->SpellIconID == 85)
             {
                 if (GetTypeId() != TYPEID_PLAYER || getClass() != CLASS_DEATH_KNIGHT ||
                     !((Player*)this)->IsBaseRuneSlotsOnCooldown(RUNE_BLOOD))
                     return false;
+            }
+            // Improved Blood Presence
+            else if (auraSpellInfo->Id == 63611)
+            {
+                if (GetTypeId() != TYPEID_PLAYER || !((Player*)this)->isHonorOrXPTarget(pVictim) || !damage)
+                    return false;
+                basepoints[0] = triggerAmount * damage / 100;
+                trigger_spell_id = 50475;
             }
             break;
         }
