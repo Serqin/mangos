@@ -2033,10 +2033,18 @@ void Player::Regenerate(Powers power, uint32 diff)
             if (getClass() != CLASS_DEATH_KNIGHT)
                 break;
 
-            for(uint32 i = 0; i < MAX_RUNES; ++i)
+            for(uint32 rune = 0; rune < MAX_RUNES; ++rune)
             {
-                if(uint16 cd = GetRuneCooldown(i))           // if we have cooldown, reduce it...
-                    SetRuneCooldown(i, (cd < diff) ? 0 : cd - diff);
+                if(uint16 cd = GetRuneCooldown(rune))       // if we have cooldown, reduce it...
+                {
+                    uint32 cd_diff = diff;
+                    AuraList const& ModPowerRegenPCTAuras = GetAurasByType(SPELL_AURA_MOD_POWER_REGEN_PERCENT);
+                    for(AuraList::const_iterator i = ModPowerRegenPCTAuras.begin(); i != ModPowerRegenPCTAuras.end(); ++i)
+                        if ((*i)->GetModifier()->m_miscvalue == power && (*i)->GetMiscBValue()==GetCurrentRune(rune))
+                            cd_diff = cd_diff * ((*i)->GetModifier()->m_amount + 100) / 100.0f;
+
+                    SetRuneCooldown(rune, (cd < cd_diff) ? 0 : cd - cd_diff);
+                }
             }
         }   break;
         case POWER_FOCUS:
@@ -8620,6 +8628,46 @@ uint32 Player::GetItemCountWithLimitCategory( uint32 limitCategory ) const
             count += pBag->GetItemCountWithLimitCategory(limitCategory);
 
     return count;
+}
+
+Item* Player::GetItemByEntry( uint32 item ) const
+{
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
+        if (Item *pItem = GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+            if (pItem->GetEntry() == item)
+                return pItem;
+
+    for(int i = KEYRING_SLOT_START; i < CURRENCYTOKEN_SLOT_END; ++i)
+        if (Item *pItem = GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+            if (pItem->GetEntry() == item)
+                return pItem;
+
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
+        if (Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i))
+            if (Item* itemPtr = pBag->GetItemByEntry(item))
+                return itemPtr;
+
+    return NULL;
+}
+
+Item* Player::GetItemByLimitedCategory(uint32 limitedCategory) const
+{
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
+        if (Item *pItem = GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+            if (pItem->GetProto()->ItemLimitCategory == limitedCategory)
+                return pItem;
+
+    for(int i = KEYRING_SLOT_START; i < CURRENCYTOKEN_SLOT_END; ++i)
+        if (Item *pItem = GetItemByPos(INVENTORY_SLOT_BAG_0, i))
+            if (pItem->GetProto()->ItemLimitCategory == limitedCategory)
+                return pItem;
+
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
+        if (Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i))
+            if (Item* itemPtr = pBag->GetItemByLimitedCategory(limitedCategory))
+                return itemPtr;
+
+    return NULL;
 }
 
 Item* Player::GetItemByGuid( uint64 guid ) const
@@ -15503,7 +15551,7 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
             }
 
             // "Conjured items disappear if you are logged out for more than 15 minutes"
-            if ((timediff > 15*60) && (item->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_CONJURED)))
+            if (timediff > 15*MINUTE && item->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_CONJURED))
             {
                 CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
                 item->FSetState(ITEM_REMOVED);
@@ -15571,7 +15619,13 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
 
             // item's state may have changed after stored
             if (success)
+            {
                 item->SetState(ITEM_UNCHANGED, this);
+
+                // recharged mana gem
+                if (timediff > 15*MINUTE && proto->ItemLimitCategory ==ITEM_LIMIT_CATEGORY_MANA_GEM)
+                    item->RestoreCharges();
+            }
             else
             {
                 sLog.outError("Player::_LoadInventory: Player %s has item (GUID: %u Entry: %u) can't be loaded to inventory (Bag GUID: %u Slot: %u) by some reason, will send by mail.", GetName(),item_guid, item_id, bag_guid, slot);
@@ -19725,7 +19779,7 @@ uint32 Player::GetResurrectionSpellId()
 }
 
 // Used in triggers for check "Only to targets that grant experience or honor" req
-bool Player::isHonorOrXPTarget(Unit* pVictim)
+bool Player::isHonorOrXPTarget(Unit* pVictim) const
 {
     uint32 v_level = pVictim->getLevel();
     uint32 k_grey  = MaNGOS::XP::GetGrayLevel(getLevel());
