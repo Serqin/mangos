@@ -1302,6 +1302,11 @@ void Player::Update( uint32 p_time )
             RegenerateAll();
     }
 
+	if (!isAlive() && !HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
+	{
+		SetHealth(0);
+	}
+
     if (m_deathState == JUST_DIED)
     {
         KillPlayer();
@@ -4161,7 +4166,8 @@ void Player::BuildPlayerRepop()
     if(GetCorpse())
     {
         sLog.outError("BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
-        assert(false);
+        sLog.outError("Removing player %s(%d) corpse from DB", GetName(), GetGUIDLow());
+		CharacterDatabase.PExecute("DELETE FROM corpse WHERE player = '%d'",GetGUIDLow());
     }
 
     // create a corpse and place it at the player's location
