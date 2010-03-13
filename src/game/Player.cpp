@@ -17670,12 +17670,13 @@ void Player::HandleStealthedUnitsDetection()
         {
             if(!hasAtClient)
             {
+                ObjectGuid i_guid = (*i)->GetGUID();
                 (*i)->SendCreateUpdateToPlayer(this);
-                m_clientGUIDs.insert((*i)->GetGUID());
+                m_clientGUIDs.insert(i_guid);
 
                 #ifdef MANGOS_DEBUG
                 if((sLog.getLogFilter() & LOG_FILTER_VISIBILITY_CHANGES)==0)
-                    sLog.outDebug("Object %u (Type: %u) is detected in stealth by player %u. Distance = %f",(*i)->GetGUIDLow(),(*i)->GetTypeId(),GetGUIDLow(),GetDistance(*i));
+                    sLog.outDebug("%s is detected in stealth by player %u. Distance = %f",i_guid.GetString().c_str(),GetGUIDLow(),GetDistance(*i));
                 #endif
 
                 // target aura duration for caster show only if target exist at caster client
@@ -18845,12 +18846,14 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, WorldObject* targe
             if (target->GetTypeId()==TYPEID_UNIT)
                 BeforeVisibilityDestroy<Creature>((Creature*)target,this);
 
+            ObjectGuid t_guid = target->GetGUID();
+
             target->DestroyForPlayer(this);
-            m_clientGUIDs.erase(target->GetGUID());
+            m_clientGUIDs.erase(t_guid);
 
             #ifdef MANGOS_DEBUG
             if((sLog.getLogFilter() & LOG_FILTER_VISIBILITY_CHANGES)==0)
-                sLog.outDebug("Object %u (Type: %u) out of range for player %u. Distance = %f",target->GetGUIDLow(),target->GetTypeId(),GetGUIDLow(),GetDistance(target));
+                sLog.outDebug("%s out of range for player %u. Distance = %f",t_guid.GetString().c_str(),GetGUIDLow(),GetDistance(target));
             #endif
         }
     }
@@ -18879,13 +18882,13 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, WorldObject* targe
 }
 
 template<class T>
-inline void UpdateVisibilityOf_helper(std::set<uint64>& s64, T* target)
+inline void UpdateVisibilityOf_helper(std::set<ObjectGuid>& s64, T* target)
 {
     s64.insert(target->GetGUID());
 }
 
 template<>
-inline void UpdateVisibilityOf_helper(std::set<uint64>& s64, GameObject* target)
+inline void UpdateVisibilityOf_helper(std::set<ObjectGuid>& s64, GameObject* target)
 {
     if(!target->IsTransport())
         s64.insert(target->GetGUID());
@@ -18900,12 +18903,14 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, T* target, UpdateD
         {
             BeforeVisibilityDestroy<T>(target,this);
 
+            ObjectGuid t_guid = target->GetGUID();
+
             target->BuildOutOfRangeUpdateBlock(&data);
-            m_clientGUIDs.erase(target->GetGUID());
+            m_clientGUIDs.erase(t_guid);
 
             #ifdef MANGOS_DEBUG
             if((sLog.getLogFilter() & LOG_FILTER_VISIBILITY_CHANGES)==0)
-                sLog.outDebug("Object %u (Type: %u, Entry: %u) is out of range for player %u. Distance = %f",target->GetGUIDLow(),target->GetTypeId(),target->GetEntry(),GetGUIDLow(),GetDistance(target));
+                sLog.outDebug("%s is out of range for player %u. Distance = %f",t_guid.GetString().c_str(),GetGUIDLow(),GetDistance(target));
             #endif
         }
     }
@@ -19532,13 +19537,12 @@ void Player::UpdateForQuestWorldObjects()
     WorldPacket packet;
     for(ClientGUIDs::const_iterator itr=m_clientGUIDs.begin(); itr!=m_clientGUIDs.end(); ++itr)
     {
-        if(IS_GAMEOBJECT_GUID(*itr))
+        if (itr->IsGameobject())
         {
-            GameObject *obj = GetMap()->GetGameObject(*itr);
-            if(obj)
+            if (GameObject *obj = GetMap()->GetGameObject(*itr))
                 obj->BuildValuesUpdateBlockForPlayer(&udata,this);
         }
-        else if(IS_CREATURE_GUID(*itr) || IS_VEHICLE_GUID(*itr))
+        else if (itr->IsCreatureOrVehicle())
         {
             Creature *obj = GetMap()->GetCreatureOrPetOrVehicle(*itr);
             if(!obj)
@@ -21680,4 +21684,45 @@ void Player::SetHomebindToLocation(WorldLocation const& loc, uint32 area_id)
         m_homebindMapId, m_homebindAreaId, m_homebindX, m_homebindY, m_homebindZ, GetGUIDLow());
 }
 
+Object* Player::GetObjectByTypeMask(ObjectGuid guid, TypeMask typemask)
+{
+    switch(guid.GetHigh())
+    {
+        case HIGHGUID_ITEM:
+            if (typemask & TYPEMASK_ITEM)
+                return GetItemByGuid(guid.GetRawValue());
+            break;
+        case HIGHGUID_PLAYER:
+            if (GetGUID()==guid.GetRawValue())
+                return this;
+            if ((typemask & TYPEMASK_PLAYER) && IsInWorld())
+                return ObjectAccessor::FindPlayer(guid.GetRawValue());
+            break;
+        case HIGHGUID_GAMEOBJECT:
+            if ((typemask & TYPEMASK_GAMEOBJECT) && IsInWorld())
+                return GetMap()->GetGameObject(guid);
+            break;
+        case HIGHGUID_UNIT:
+            if ((typemask & TYPEMASK_UNIT) && IsInWorld())
+                return GetMap()->GetCreature(guid);
+            break;
+        case HIGHGUID_PET:
+            if ((typemask & TYPEMASK_UNIT) && IsInWorld())
+                return GetMap()->GetPet(guid);
+            break;
+        case HIGHGUID_VEHICLE:
+            if ((typemask & TYPEMASK_UNIT) && IsInWorld())
+                return GetMap()->GetVehicle(guid);
+            break;
+        case HIGHGUID_DYNAMICOBJECT:
+            if ((typemask & TYPEMASK_DYNAMICOBJECT) && IsInWorld())
+                return GetMap()->GetDynamicObject(guid);
+            break;
+        case HIGHGUID_TRANSPORT:
+        case HIGHGUID_CORPSE:
+        case HIGHGUID_MO_TRANSPORT:
+            break;
+    }
 
+    return NULL;
+}
