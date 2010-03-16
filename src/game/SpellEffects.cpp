@@ -6733,6 +6733,16 @@ void Spell::EffectReputation(SpellEffectIndex eff_idx)
 
     FactionEntry const* factionEntry = sFactionStore.LookupEntry(faction_id);
 
+	switch (m_spellInfo->Id){
+		case 61306: //Kirin Tor Commendation Badge
+		case 61311: //Argent Crusade Commendation Badge
+		case 61312: //Ebon Blade Commendation Badge
+		case 69757: //Sons of Hodir Commendation Badge
+		case 61308: //Wyrmrest Commendation Badge
+			rep_change *= 1.3;
+			break;
+	}
+
     if(!factionEntry)
         return;
 
