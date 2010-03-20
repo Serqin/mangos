@@ -10289,6 +10289,7 @@ void Unit::SetInCombatState(bool PvP, Unit* enemy)
 
     if (creatureNotInCombat)
     {
+        // should probably be removed for the attacked (+ it's party/group) only, not global
         RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
 
         if (((Creature*)this)->AI())
@@ -11186,11 +11187,13 @@ bool Unit::SelectHostileTarget()
         // No taunt aura or taunt aura caster is dead standart target selection
         target = m_ThreatManager.getHostileTarget();
 
-    if(target)
+    if (target)
     {
-        if(!hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_DIED))
+        if (!hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_DIED))
+        {
             SetInFront(target);
-        ((Creature*)this)->AI()->AttackStart(target);
+            ((Creature*)this)->AI()->AttackStart(target);
+        }
         return true;
     }
 
