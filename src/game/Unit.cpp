@@ -7050,6 +7050,31 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 target = this;
                 break;
             }
+            // Sudden Doom
+            if (dummySpell->SpellIconID == 1939)
+            {
+                if (!target || !target->isAlive() || this->GetTypeId() != TYPEID_PLAYER)
+                    return false;
+                
+                // get highest rank of Death Coil spell
+                const PlayerSpellMap& sp_list = ((Player*)this)->GetSpellMap();
+                for (PlayerSpellMap::const_iterator itr = sp_list.begin(); itr != sp_list.end(); ++itr)
+                {
+                    if(!itr->second.active || itr->second.disabled || itr->second.state == PLAYERSPELL_REMOVED)
+                        continue;
+ 
+                    SpellEntry const *spellInfo = sSpellStore.LookupEntry(itr->first);
+                    if (!spellInfo)
+                        continue;
+ 
+                    if (spellInfo->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT && spellInfo->SpellFamilyFlags & UI64LIT(0x2000))
+                    {
+                        triggered_spell_id = spellInfo->Id;
+                        break;
+                    }
+                }
+                break;
+            }
             // Wandering Plague
             if (dummySpell->SpellIconID == 1614)
             {
@@ -7844,13 +7869,13 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
         }
         // Lock and Load
         case 56453:
-        {			
+        {
 			// Proc only from trap activation (from periodic proc another aura of this spell). We need to recheck family flags,
 			// because some spells have both flags (ON_TRAP_ACTIVATION and ON_PERIODIC), but should only proc ON_PERIODIC!!
 			if (!(procFlags & PROC_FLAG_ON_TRAP_ACTIVATION) ||
-				 !(procSpell->SpellFamilyFlags & 0x00000008 || procSpell->SpellFamilyFlags2 & 0x40000) || !roll_chance_i(triggerAmount))
-				 return false;
-            break;
+				!(procSpell->SpellFamilyFlags & 0x00000008 || procSpell->SpellFamilyFlags2 & 0x40000) || !roll_chance_i(triggerAmount))
+				return false;
+			break;
         }
         // Freezing Fog (Rime triggered)
         case 59052:
