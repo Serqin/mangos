@@ -15,3 +15,6 @@
 *.sdf
 *.sln.cache
 ipch
+VC100
+VC80
+VC90
