@@ -1079,9 +1079,10 @@ void Aura::_AddAura()
             // Enrage aura state
             if(m_spellProto->Dispel == DISPEL_ENRAGE)
                 m_target->ModifyAuraState(AURA_STATE_ENRAGE, true);
-			//if (m_spellProto->Mechanic == MECHANIC_BLEED)
-			if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED - 1)))
-				m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, true);
+
+            // Mechanic bleed aura state
+            if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED-1)))
+                m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, true);
         }
     }
 }
@@ -1159,6 +1160,10 @@ bool Aura::_RemoveAura()
         if(m_spellProto->Dispel == DISPEL_ENRAGE)
             m_target->ModifyAuraState(AURA_STATE_ENRAGE, false);
 
+        // Mechanic bleed aura state
+        if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED-1)))
+            m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, false);
+
         uint32 removeState = 0;
         uint64 removeFamilyFlag = m_spellProto->SpellFamilyFlags;
         uint32 removeFamilyFlag2 = m_spellProto->SpellFamilyFlags2;
@@ -1199,22 +1204,6 @@ bool Aura::_RemoveAura()
                 if(m_spellProto->SpellFamilyFlags & UI64LIT(0x1000000000000000))
                     removeState = AURA_STATE_FAERIE_FIRE;   // Sting (hunter versions)
         }
-
-		if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED - 1)))
-		{
-			bool found = false;
-			Unit::AuraList const& mPerDmg = m_target->GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
-			for(Unit::AuraList::const_iterator i = mPerDmg.begin(); i != mPerDmg.end(); ++i)
-			{
-				if(GetAllSpellMechanicMask((*i)->m_spellProto) & (1 << (MECHANIC_BLEED - 1)))
-				{
-					found = true;
-					break;
-				}
-			}
-			if(!found)
-				m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, false);
-		}
 
         // Remove state (but need check other auras for it)
         if (removeState)
