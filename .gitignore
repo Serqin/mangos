@@ -67,6 +67,10 @@ patches-*
 #
 bin/*
 
+# OS specific
+# MacOS
+.DS_Store
+
 #
 # Special exceptions
 #
