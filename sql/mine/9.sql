@@ -1,0 +1,4 @@
+/* Priest T8 Healer 4P Bonus */
+DELETE FROM spell_proc_event WHERE entry = 64912;
+INSERT INTO spell_proc_event VALUES
+(64912, 0x00000000, 6, 0x00000001, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0.0, 0.0, 0);
