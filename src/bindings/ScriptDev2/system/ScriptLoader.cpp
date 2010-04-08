@@ -9,6 +9,8 @@ extern void AddSC_battleground();
 
 //custom
 extern void AddSC_Lavi();
+extern void AddSC_boss_bronjahm();
+extern void AddSC_boss_devourer_of_souls();
 
 //examples
 extern void AddSC_example_creature();
@@ -414,6 +416,8 @@ void AddScripts()
 
     //custom
 	AddSC_Lavi();
+	AddSC_boss_bronjahm();
+	AddSC_boss_devourer_of_souls();
 
     //examples
     AddSC_example_creature();

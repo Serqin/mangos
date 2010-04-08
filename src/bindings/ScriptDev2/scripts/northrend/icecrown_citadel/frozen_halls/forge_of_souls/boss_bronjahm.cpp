@@ -22,3 +22,90 @@ SDCategory: The Forge of Souls
 EndScriptData */
 
 #include "precompiled.h"
+
+enum
+{
+	SPELL_FEAR = 68950,
+	SPELL_MAGICS_BANE = 68793,
+	H_SPELL_MAGICS_BANE = 69050,
+	SPELL_SOULSTORM = 68872,
+	SPELL_TELEPORT = 68988
+};
+
+struct MANGOS_DLL_DECL boss_bronjahm : public ScriptedAI
+{
+	
+	boss_bronjahm(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+		Reset();
+    }
+
+	bool m_bIsRegularMode;
+	bool soulStormCasted;
+	bool teleported;
+	bool fearCasted;
+
+    uint32 MagicBane_Timer;
+
+	void Reset()
+    {
+        MagicBane_Timer = 5000;
+		soulStormCasted = false;
+		teleported = false;
+		fearCasted = false;
+    }
+	
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (MagicBane_Timer < uiDiff)
+        {
+			if (DoCastSpellIfCan(m_creature->getVictim(), m_bIsRegularMode ? SPELL_MAGICS_BANE : H_SPELL_MAGICS_BANE, CAST_TRIGGERED) == CAST_OK){
+				MagicBane_Timer = urand(4000, 7000);
+			}
+        }
+        else MagicBane_Timer -= uiDiff;
+
+		if (!soulStormCasted && m_creature->GetHealthPercent() < 30.0f){
+			if (!teleported){
+				if (DoCastSpellIfCan(m_creature, SPELL_TELEPORT) == CAST_OK){
+					teleported = true;
+				}
+			}
+
+			if (teleported && !fearCasted){
+				if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_FEAR) == CAST_OK){
+					fearCasted = true;
+				}
+			}
+
+			if (fearCasted && !soulStormCasted){
+				if (DoCastSpellIfCan(m_creature, SPELL_SOULSTORM) == CAST_OK){
+					soulStormCasted = true;
+				}
+			}
+		}
+
+        DoMeleeAttackIfReady();
+    }
+
+};
+
+
+
+CreatureAI* GetAI_boss_bronjahm(Creature* pCreature)
+{
+    return new boss_bronjahm(pCreature);
+}
+
+void AddSC_boss_bronjahm()
+{
+    Script* NewScript;
+    NewScript = new Script;
+    NewScript->Name = "boss_bronjahm";
+    NewScript->GetAI = &GetAI_boss_bronjahm;
+    NewScript->RegisterSelf();
+}
