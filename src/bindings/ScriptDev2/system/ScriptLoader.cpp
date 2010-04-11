@@ -11,6 +11,9 @@ extern void AddSC_battleground();
 extern void AddSC_Lavi();
 extern void AddSC_boss_bronjahm();
 extern void AddSC_boss_devourer_of_souls();
+extern void AddSC_boss_forgemaster_gafrost();
+extern void AddSC_boss_ick();
+extern void AddSC_boss_scourgelord_tyrannus();
 
 //examples
 extern void AddSC_example_creature();
@@ -418,6 +421,9 @@ void AddScripts()
 	AddSC_Lavi();
 	AddSC_boss_bronjahm();
 	AddSC_boss_devourer_of_souls();
+	AddSC_boss_forgemaster_gafrost();
+	AddSC_boss_ick();
+	AddSC_boss_scourgelord_tyrannus();
 
     //examples
     AddSC_example_creature();
