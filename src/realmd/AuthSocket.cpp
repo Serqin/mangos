@@ -348,6 +348,7 @@ void AuthSocket::SendProof(Sha1Hash sha)
         case 10505:                                         // 3.2.2a
         case 11159:                                         // 3.3.0a
         case 11403:                                         // 3.3.2
+        case 11723:                                         // 3.3.3a
         default:                                            // or later
         {
             sAuthLogonProof_S proof;
@@ -983,6 +984,7 @@ void AuthSocket::LoadRealmlist(ByteBuffer &pkt, uint32 acctid)
         case 10505:                                         // 3.2.2a
         case 11159:                                         // 3.3.0a
         case 11403:                                         // 3.3.2
+        case 11723:                                         // 3.3.3a
         default:                                            // and later
         {
             pkt << uint32(0);
@@ -1020,10 +1022,10 @@ void AuthSocket::LoadRealmlist(ByteBuffer &pkt, uint32 acctid)
 
                 /*if(realmFlags & REALM_FLAG_SPECIFYBUILD)
                 {
-                    pkt << uint8(3);                        // major
-                    pkt << uint8(3);                        // minor
-                    pkt << uint8(3);                        // revision
-                    pkt << uint16(11723);                   // build
+                    pkt << uint8(0);                        // major
+                    pkt << uint8(0);                        // minor
+                    pkt << uint8(0);                        // revision
+                    pkt << uint16(0);                       // build
                 }*/
             }
 
