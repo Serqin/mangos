@@ -15,6 +15,7 @@
 *.sdf
 *.opensdf
 *.sln.cache
+*.vsp
 ipch
 VC100
 VC80
