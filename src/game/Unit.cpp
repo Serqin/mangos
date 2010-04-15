@@ -7930,6 +7930,13 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 return false;
             break;
         }
+        // Unyielding Knights (item exploit 29108\29109)
+        case 38164:
+        {
+            if (pVictim->GetEntry() != 19457)  // Proc only if you target is Grillok
+            return false;
+            break;
+        } 
         // Demonic Pact
         case 48090:
         {
