@@ -3459,7 +3459,7 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
         {
             // Vampiric Embrace
             if ((spellproto->SpellFamilyFlags & UI64LIT(0x00000000004)) && spellproto->SpellIconID == 150)
-                return DIMINISHING_LIMITONLY;
+                return DIMINISHING_NONE;
             // Shackle Undead
             else if (spellproto->SpellIconID == 27)
                 return DIMINISHING_DISORIENT;
