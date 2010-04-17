@@ -30,6 +30,7 @@ npc_tiare
 EndContentData */
 
 #include "precompiled.h"
+#include "follower_ai.h"
 
 /*######
 ## npc_fizzcrank_fullthrottle
@@ -253,6 +254,99 @@ bool GossipSelect_npc_tiare(Player* pPlayer, Creature* pCreature, uint32 uiSende
     return true;
 }
 
+/*######
+## npc_nexus_drake_hatchling
+######*/
+
+enum
+{
+    SPELL_DRAKE_HARPOON             = 46607,
+    SPELL_RED_DRAGONBLOOD           = 46620,
+    SPELL_DRAKE_HATCHLING_SUBDUED   = 46691,
+    SPELL_SUBDUED                   = 46675,
+
+    NPC_RAELORASZ                   = 26117,
+
+    QUEST_DRAKE_HUNT                = 11919,
+    QUEST_DRAKE_HUNT_D              = 11940
+};
+
+struct MANGOS_DLL_DECL npc_nexus_drake_hatchlingAI : public FollowerAI //The spell who makes the npc follow the player is missing, also we can use FollowerAI!
+{
+	npc_nexus_drake_hatchlingAI(Creature* pCreature) : FollowerAI(pCreature) { Reset(); }
+
+    uint64 HarpoonerGUID;
+    bool WithRedDragonBlood;
+
+    void Reset()
+    {
+       WithRedDragonBlood = false;
+       HarpoonerGUID = 0;
+    }
+
+    void SpellHit(Unit *caster, const SpellEntry *spell)
+    {
+        if (spell->Id == SPELL_DRAKE_HARPOON && caster->GetTypeId() == TYPEID_PLAYER)
+        {
+            HarpoonerGUID = caster->GetGUID();
+            DoCast(m_creature, SPELL_RED_DRAGONBLOOD, true);
+			WithRedDragonBlood = true;
+        }
+    }
+
+    void MoveInLineOfSight(Unit *pWho)
+    {
+        FollowerAI::MoveInLineOfSight(pWho);
+		
+        if (pWho->GetEntry() == NPC_RAELORASZ && m_creature->HasAura(SPELL_SUBDUED))
+        {
+            if (m_creature->IsWithinDistInMap(pWho, INTERACTION_DISTANCE))
+            {
+				if (Player* pHarpooner = GetLeaderForFollower())
+                {
+                    pHarpooner->KilledMonsterCredit(26175,0);
+                    pHarpooner->RemoveAurasDueToSpell(SPELL_DRAKE_HATCHLING_SUBDUED);
+                    SetFollowComplete();
+					m_creature->ForcedDespawn();
+                }
+            }
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+		if (!m_creature->HasAura(SPELL_SUBDUED) && HasFollowState(STATE_FOLLOW_INPROGRESS))
+		{
+			m_creature->ForcedDespawn();
+		}
+        if (WithRedDragonBlood && HarpoonerGUID && !m_creature->HasAura(SPELL_RED_DRAGONBLOOD))
+        {
+            if (Player* pHarpooner = (Player*)Unit::GetUnit(*m_creature, HarpoonerGUID))
+            {
+                EnterEvadeMode();
+                StartFollow(pHarpooner, 35, NULL);
+
+                DoCast(m_creature, SPELL_SUBDUED, true);
+                pHarpooner->CastSpell(pHarpooner, SPELL_DRAKE_HATCHLING_SUBDUED, true);
+
+                m_creature->AttackStop();
+                WithRedDragonBlood = false;
+            }
+        }
+
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+
+CreatureAI* GetAI_npc_nexus_drake_hatchling(Creature* pCreature)
+{
+    return new npc_nexus_drake_hatchlingAI(pCreature);
+}
+
 void AddSC_borean_tundra()
 {
     Script *newscript;
@@ -285,5 +379,10 @@ void AddSC_borean_tundra()
     newscript->Name = "npc_tiare";
     newscript->pGossipHello = &GossipHello_npc_tiare;
     newscript->pGossipSelect = &GossipSelect_npc_tiare;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_nexus_drake_hatchling";
+    newscript->GetAI = &GetAI_npc_nexus_drake_hatchling;
     newscript->RegisterSelf();
 }
