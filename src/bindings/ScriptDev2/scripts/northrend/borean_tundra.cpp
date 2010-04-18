@@ -347,6 +347,52 @@ CreatureAI* GetAI_npc_nexus_drake_hatchling(Creature* pCreature)
     return new npc_nexus_drake_hatchlingAI(pCreature);
 }
 
+/*######
+## npc_keristrasza
+######*/
+
+enum
+{
+    SPELL_TELEPORT_TO_SARAGOSA = 46772,
+	SPELL_TELEPORT_TO_TARNSITUS = 46824
+};
+
+#define GOSSIP_HELLO_KERI   "I am prepared to face Saragosa!"
+#define GOSSIP_HELLO_KERI2   "Teleport me to Transitus Shield!"
+
+bool GossipHello_npc_keristrasza(Player* pPlayer, Creature* pCreature)
+{
+    if (pCreature->isQuestGiver())
+        pPlayer->PrepareQuestMenu(pCreature->GetGUID());
+
+    if (pPlayer->GetQuestStatus(11957) == QUEST_STATUS_INCOMPLETE)
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_HELLO_KERI, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+
+	if (pPlayer->hasQuest(11967))
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_HELLO_KERI2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_npc_keristrasza(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF + 1)
+    {
+        pPlayer->CLOSE_GOSSIP_MENU();
+		pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_TO_SARAGOSA, false);
+    }
+
+	if (uiAction == GOSSIP_ACTION_INFO_DEF + 2)
+    {
+        pPlayer->CLOSE_GOSSIP_MENU();
+		pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_TO_SARAGOSA, false);
+    }
+
+    return true;
+}
+
 void AddSC_borean_tundra()
 {
     Script *newscript;
@@ -384,5 +430,11 @@ void AddSC_borean_tundra()
     newscript = new Script;
     newscript->Name = "npc_nexus_drake_hatchling";
     newscript->GetAI = &GetAI_npc_nexus_drake_hatchling;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "npc_keristrasza";
+    newscript->pGossipHello = &GossipHello_npc_keristrasza;
+    newscript->pGossipSelect = &GossipSelect_npc_keristrasza;
     newscript->RegisterSelf();
 }
