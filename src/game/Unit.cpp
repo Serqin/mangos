@@ -1809,67 +1809,6 @@ uint32 Unit::CalcArmorReducedDamage(Unit* pVictim, const uint32 damage)
     return (newdamage > 1) ? newdamage : 1;
 }
 
-void Unit::CalcHealAbsorb(Unit *pVictim, const SpellEntry *spellProto, uint32 &HealAmount, uint32 &Absorbed)
-{
-    int32 finalAmount = int32(HealAmount);
-    bool existExpired = false;
-
-    // handle heal absorb effects
-    AuraList const& healAbsorbAuras = pVictim->GetAurasByType(SPELL_AURA_SCHOOL_HEAL_ABSORB);
-    for (AuraList::const_iterator aura = healAbsorbAuras.begin(); aura != healAbsorbAuras.end() && finalAmount > 0; ++aura)
-    {
-        Modifier* mod = (*aura)->GetModifier();
-
-        // check if affects this school
-        if (!(mod->m_miscvalue & spellProto->SchoolMask))
-            continue;
-
-        // max amount that can be absorbed by this aura
-        int32 currentAbsorb = mod->m_amount;
-
-       // found empty aura (impossible but..)
-        if (currentAbsorb <= 0)
-        {
-            existExpired = true;
-           continue;
-        }
-
-        // can't absorb more than heal amount
-        if (finalAmount < currentAbsorb)
-            currentAbsorb = finalAmount;
-
-        // reduce heal amount by absorb amount
-        finalAmount -= currentAbsorb;
-
-        // reduce aura amount
-        mod->m_amount -= currentAbsorb;
-
-        if ((*aura)->DropAuraCharge())
-            mod->m_amount = 0;
-
-        // check if aura needs to be removed
-        if (mod->m_amount <= 0)
-            existExpired = true;
-    }
-    // Remove all consumed absorb auras
-    if (existExpired)
-    {
-        for (AuraList::const_iterator aura = healAbsorbAuras.begin(); aura != healAbsorbAuras.end(); )
-        {
-            if ((*aura)->GetModifier()->m_amount <= 0)
-            {
-                pVictim->RemoveAurasDueToSpell((*aura)->GetId());
-                aura = healAbsorbAuras.begin();
-            }
-            else
-                ++aura;
-        }
-    }
-
-    Absorbed = HealAmount - finalAmount;
-    HealAmount = finalAmount;
-}
-
 void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, DamageEffectType damagetype, const uint32 damage, uint32 *absorb, uint32 *resist, bool canReflect)
 {
     if(!pCaster || !isAlive() || !damage)
@@ -4914,7 +4853,6 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo *pInfo)
         case SPELL_AURA_OBS_MOD_HEALTH:
             data << uint32(pInfo->damage);                  // damage
             data << uint32(pInfo->overDamage);              // overheal?
-            data << uint32(pInfo->absorb);                  // absorb
             data << uint8(pInfo->critical ? 1 : 0);         // new 3.1.2 critical flag
             break;
         case SPELL_AURA_OBS_MOD_MANA:
@@ -8996,11 +8934,7 @@ void Unit::UnsummonAllTotems()
 
 int32 Unit::DealHeal(Unit *pVictim, uint32 addhealth, SpellEntry const *spellProto, bool critical)
 {
-    // calculate heal absorb and reduce healing
-    uint32 absorb = 0;
-    CalcHealAbsorb(pVictim, spellProto, addhealth, absorb);
-
-    int32 gain = addhealth ? pVictim->ModifyHealth(int32(addhealth)) : 0;
+    int32 gain = pVictim->ModifyHealth(int32(addhealth));
 
     Unit* unit = this;
 
@@ -9010,7 +8944,7 @@ int32 Unit::DealHeal(Unit *pVictim, uint32 addhealth, SpellEntry const *spellPro
     if (unit->GetTypeId()==TYPEID_PLAYER)
     {
         // overheal = addhealth - gain
-        unit->SendHealSpellLog(pVictim, spellProto->Id, addhealth, addhealth - gain, absorb, critical);
+        unit->SendHealSpellLog(pVictim, spellProto->Id, addhealth, addhealth - gain, critical);
 
         if (BattleGround *bg = ((Player*)unit)->GetBattleGround())
             bg->UpdatePlayerScore((Player*)unit, SCORE_HEALING_DONE, gain);
@@ -9060,16 +8994,15 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, SpellEntry const *spellInfo)
     return victim;
 }
 
-void Unit::SendHealSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, uint32 OverHeal, uint32 Absorbed, bool critical)
+void Unit::SendHealSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, uint32 OverHeal, bool critical)
 {
     // we guess size
-    WorldPacket data(SMSG_SPELLHEALLOG, (8+8+4+4+4+4+1+1));
+    WorldPacket data(SMSG_SPELLHEALLOG, (8+8+4+4+1));
     data << pVictim->GetPackGUID();
     data << GetPackGUID();
     data << uint32(SpellID);
     data << uint32(Damage);
     data << uint32(OverHeal);
-    data << uint32(Absorbed);
     data << uint8(critical ? 1 : 0);
     data << uint8(0);                                       // unused in client?
     SendMessageToSet(&data, true);
