@@ -2332,6 +2332,8 @@ void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, D
     *absorb = damage - RemainingDamage - *resist;
 }
 
+
+
 void Unit::CalcHealAbsorb(Unit *pVictim, const SpellEntry *spellProto, uint32 &HealAmount, uint32 &Absorbed)
 {
     int32 finalAmount = int32(HealAmount);
