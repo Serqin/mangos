@@ -1824,6 +1824,67 @@ uint32 Unit::CalcArmorReducedDamage(Unit* pVictim, const uint32 damage)
     return (newdamage > 1) ? newdamage : 1;
 }
 
+void Unit::CalcHealAbsorb(Unit *pVictim, const SpellEntry *spellProto, uint32 &HealAmount, uint32 &Absorbed)
+{
+    int32 finalAmount = int32(HealAmount);
+    bool existExpired = false;
+
+    // handle heal absorb effects
+    AuraList const& healAbsorbAuras = pVictim->GetAurasByType(SPELL_AURA_SCHOOL_HEAL_ABSORB);
+    for (AuraList::const_iterator aura = healAbsorbAuras.begin(); aura != healAbsorbAuras.end() && finalAmount > 0; ++aura)
+    {
+        Modifier* mod = (*aura)->GetModifier();
+
+        // check if affects this school
+        if (!(mod->m_miscvalue & spellProto->SchoolMask))
+            continue;
+
+        // max amount that can be absorbed by this aura
+        int32 currentAbsorb = mod->m_amount;
+
+       // found empty aura (impossible but..)
+        if (currentAbsorb <= 0)
+        {
+            existExpired = true;
+           continue;
+        }
+
+        // can't absorb more than heal amount
+        if (finalAmount < currentAbsorb)
+            currentAbsorb = finalAmount;
+
+        // reduce heal amount by absorb amount
+        finalAmount -= currentAbsorb;
+
+        // reduce aura amount
+        mod->m_amount -= currentAbsorb;
+
+        if ((*aura)->DropAuraCharge())
+            mod->m_amount = 0;
+
+        // check if aura needs to be removed
+        if (mod->m_amount <= 0)
+            existExpired = true;
+    }
+    // Remove all consumed absorb auras
+    if (existExpired)
+    {
+        for (AuraList::const_iterator aura = healAbsorbAuras.begin(); aura != healAbsorbAuras.end(); )
+        {
+            if ((*aura)->GetModifier()->m_amount <= 0)
+            {
+                pVictim->RemoveAurasDueToSpell((*aura)->GetId());
+                aura = healAbsorbAuras.begin();
+            }
+            else
+                ++aura;
+        }
+    }
+
+    Absorbed = HealAmount - finalAmount;
+    HealAmount = finalAmount;
+}
+
 void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, DamageEffectType damagetype, const uint32 damage, uint32 *absorb, uint32 *resist, bool canReflect)
 {
     if(!pCaster || !isAlive() || !damage)
@@ -2330,69 +2391,6 @@ void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, D
     }
 
     *absorb = damage - RemainingDamage - *resist;
-}
-
-
-
-void Unit::CalcHealAbsorb(Unit *pVictim, const SpellEntry *spellProto, uint32 &HealAmount, uint32 &Absorbed)
-{
-    int32 finalAmount = int32(HealAmount);
-    bool existExpired = false;
-
-    // handle heal absorb effects
-    AuraList const& healAbsorbAuras = pVictim->GetAurasByType(SPELL_AURA_SCHOOL_HEAL_ABSORB);
-    for (AuraList::const_iterator aura = healAbsorbAuras.begin(); aura != healAbsorbAuras.end() && finalAmount > 0; ++aura)
-    {
-        Modifier* mod = (*aura)->GetModifier();
-
-        // check if affects this school
-        if (!(mod->m_miscvalue & spellProto->SchoolMask))
-            continue;
-
-        // max amount that can be absorbed by this aura
-        int32 currentAbsorb = mod->m_amount;
-
-       // found empty aura (impossible but..)
-        if (currentAbsorb <= 0)
-        {
-            existExpired = true;
-           continue;
-        }
-
-        // can't absorb more than heal amount
-        if (finalAmount < currentAbsorb)
-            currentAbsorb = finalAmount;
-
-        // reduce heal amount by absorb amount
-        finalAmount -= currentAbsorb;
-
-        // reduce aura amount
-        mod->m_amount -= currentAbsorb;
-
-        if ((*aura)->DropAuraCharge())
-            mod->m_amount = 0;
-
-        // check if aura needs to be removed
-        if (mod->m_amount <= 0)
-            existExpired = true;
-    }
-    // Remove all consumed absorb auras
-    if (existExpired)
-    {
-        for (AuraList::const_iterator aura = healAbsorbAuras.begin(); aura != healAbsorbAuras.end(); )
-        {
-            if ((*aura)->GetModifier()->m_amount <= 0)
-            {
-                pVictim->RemoveAurasDueToSpell((*aura)->GetId());
-                aura = healAbsorbAuras.begin();
-            }
-            else
-                ++aura;
-        }
-    }
-
-    Absorbed = HealAmount - finalAmount;
-    HealAmount = finalAmount;
 }
 
 void Unit::AttackerStateUpdate (Unit *pVictim, WeaponAttackType attType, bool extra )
