@@ -92,7 +92,7 @@ struct MANGOS_DLL_DECL boss_scourgelord_tyrannus : public ScriptedAI
 
 		if (m_uiOverlordsBrandTimer < uiDiff)
 		{
-			if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
 				if (DoCastSpellIfCan(pTarget, SPELL_OVERLORDS_BRAND) == CAST_OK)
 					m_uiOverlordsBrandTimer = urand(30000,45000);
 		}

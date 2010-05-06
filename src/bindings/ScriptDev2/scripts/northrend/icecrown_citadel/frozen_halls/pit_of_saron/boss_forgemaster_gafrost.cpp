@@ -125,7 +125,7 @@ struct MANGOS_DLL_DECL boss_forgemaster_gafrost : public ScriptedAI
 
 				if (m_uiThrowSaroniteTimer < uiDiff)
 				{
-					if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+					if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
 						if (DoCastSpellIfCan(pTarget, SPELL_THROW_SARONITE) == CAST_OK)
 							m_uiThrowSaroniteTimer = 35000;
 				}
@@ -138,7 +138,7 @@ struct MANGOS_DLL_DECL boss_forgemaster_gafrost : public ScriptedAI
 
 				if (m_uiChillingWaveTimer < uiDiff)
 				{
-					if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+					if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
 						if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_CHILLING_WAVE : H_SPELL_CHILLING_WAVE) == CAST_OK)
 							m_uiChillingWaveTimer = 40000;
 				}
@@ -152,7 +152,7 @@ struct MANGOS_DLL_DECL boss_forgemaster_gafrost : public ScriptedAI
 
 				if (m_uiDeepFreezeTimer < uiDiff)
 				{
-					if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+					if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
 						if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_DEEP_FREEZE : H_SPELL_DEEP_FREEZE) == CAST_OK)
 							m_uiDeepFreezeTimer = 35000;
 				}
