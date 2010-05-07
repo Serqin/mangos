@@ -39,6 +39,9 @@ enum
     SAY_SWARM_1                     = -1601010,
     SAY_SWARM_2                     = -1601011,
     SAY_DEATH                       = -1601012,
+	SPELL_CURSE_OF_FATIGUE          = 52592,
+	SPELL_FRENZY					= 28747,
+	SPELL_MIND_FLAY					= 52586,
     EMOTE_BOSS_GENERIC_FRENZY       = -1000005
 };
 
@@ -58,8 +61,15 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
+		uint32 m_uiMindFlayTimer;
+		uint32 m_uiCurseOfFatigueTimer;
+		uint32 m_uiSummonTimer;
+
     void Reset()
     {
+		m_uiMindFlayTimer = 15000;
+		m_uiCurseOfFatigueTimer = 30000;
+		m_uiSummonTimer = 15000;
     }
 
     void Aggro(Unit* pWho)
@@ -80,12 +90,32 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
+		m_pInstance->SetData(TYPE_KRIKTHIR, DONE);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+		if (!m_creature->HasAura(SPELL_FRENZY) && m_creature->GetHealthPercent() < 10.0f)
+			m_creature->CastSpell(m_creature, SPELL_FRENZY, true);
+
+		if (m_uiCurseOfFatigueTimer < uiDiff)
+            {
+                Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
+				DoCastSpellIfCan(pTarget, SPELL_CURSE_OF_FATIGUE);
+				
+				m_uiCurseOfFatigueTimer = 30000;
+            }else m_uiCurseOfFatigueTimer -= uiDiff;
+
+		if (m_uiMindFlayTimer < uiDiff)
+            {
+				DoCastSpellIfCan(m_creature->getVictim(), SPELL_MIND_FLAY);
+				
+				m_uiMindFlayTimer = 15000;
+            }else m_uiMindFlayTimer -= uiDiff;
+
 
         DoMeleeAttackIfReady();
     }
