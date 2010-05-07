@@ -14,6 +14,7 @@ extern void AddSC_boss_devourer_of_souls();
 extern void AddSC_boss_forgemaster_gafrost();
 extern void AddSC_boss_ick();
 extern void AddSC_boss_scourgelord_tyrannus();
+extern void AddSC_instance_forge_of_souls();
 
 //examples
 extern void AddSC_example_creature();
@@ -423,6 +424,7 @@ void AddScripts()
 	AddSC_boss_forgemaster_gafrost();
 	AddSC_boss_ick();
 	AddSC_boss_scourgelord_tyrannus();
+	AddSC_instance_forge_of_souls();
 
     //examples
     AddSC_example_creature();
