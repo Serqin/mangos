@@ -312,6 +312,9 @@ extern void AddSC_boss_sjonnir();
 extern void AddSC_halls_of_stone();
 extern void AddSC_instance_halls_of_stone();
 extern void AddSC_instance_ulduar();                        //ulduar
+extern void AddSC_ulduar_teleport();
+extern void AddSC_boss_ignis();
+extern void AddSC_boss_xt002();
 extern void AddSC_boss_ingvar();                            //utgarde_keep
 extern void AddSC_boss_keleseth();
 extern void AddSC_boss_skarvald_and_dalronn();
@@ -722,6 +725,9 @@ void AddScripts()
     AddSC_halls_of_stone();
     AddSC_instance_halls_of_stone();
     AddSC_instance_ulduar();                                //ulduar
+	AddSC_ulduar_teleport();
+	AddSC_boss_ignis();
+	AddSC_boss_xt002();
     AddSC_boss_ingvar();                                    //utgarde_keep
     AddSC_boss_keleseth();
     AddSC_boss_skarvald_and_dalronn();

@@ -48,6 +48,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
 
     void Initialize()
     {
+		debug_log("Ulduar inited");
         m_uiLeviathanGUID       = 0;
         m_uiIgnisGUID           = 0;
         m_uiRazorscaleGUID      = 0;

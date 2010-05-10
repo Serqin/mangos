@@ -86,7 +86,7 @@ struct MANGOS_DLL_DECL boss_forgemaster_gafrost : public ScriptedAI
     {
 		if (EventPhase == 0 && m_creature->GetHealthPercent() < 66){
 			DoCastSpellIfCan(m_creature, SPELL_THUNDERING_STOMP, CAST_TRIGGERED);
-			if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_FORGE_BLADE : H_SPELL_FORGE_BLADE) == CAST_OK){
+			if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_FORGE_BLADE : H_SPELL_FORGE_BLADE, CAST_TRIGGERED) == CAST_OK){
 				SetEquipmentSlots(false, EQUIP_ID_SWORD, -1, -1);
 				//m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE);
 				EventPhase = 1;
@@ -96,7 +96,7 @@ struct MANGOS_DLL_DECL boss_forgemaster_gafrost : public ScriptedAI
 
 		if (EventPhase == 1 && m_creature->GetHealthPercent() < 33){
 			DoCastSpellIfCan(m_creature, SPELL_THUNDERING_STOMP, CAST_TRIGGERED);
-			if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_FORGE_MACE : H_SPELL_FORGE_MACE) == CAST_OK){
+			if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_FORGE_MACE : H_SPELL_FORGE_MACE, CAST_TRIGGERED) == CAST_OK){
 				SetEquipmentSlots(false, EQUIP_ID_MACE, -1, -1);
 				//m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE);
 				EventPhase = 2;
