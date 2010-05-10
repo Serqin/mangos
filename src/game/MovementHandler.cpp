@@ -299,6 +299,52 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 
     /*----------------------*/
 
+	 if (plMover->GetTypeId() == TYPEID_PLAYER){
+		 const uint32 CurTime = getMSTime();
+
+		 if (CurTime > plMover->m_anti_lastmovetime && plMover->m_anti_lastmovetime 
+			 && !(movementInfo.GetMovementFlags() & (MOVEFLAG_FALLINGFAR | MOVEFLAG_SAFE_FALL))
+			 && plMover->GetZoneId() != 2257){
+
+			 float delta_t = getMSTimeDiff(plMover->m_anti_lastmovetime,CurTime);
+
+			 if (delta_t > 100) {
+				 UnitMoveType move_type;
+				 if (movementInfo.GetMovementFlags() & MOVEFLAG_FLYING) move_type = MOVE_FLIGHT;
+				 else if (movementInfo.GetMovementFlags() & MOVEFLAG_SWIMMING) move_type = MOVE_SWIM;
+				 else if (movementInfo.GetMovementFlags() & MOVEFLAG_WALK_MODE) move_type = MOVE_WALK;
+				 else move_type = MOVE_RUN;
+
+				 float delta_x = plMover->GetPositionX() - movementInfo.GetPos()->x;
+				 float delta_y = plMover->GetPositionY() - movementInfo.GetPos()->y;
+				 //float delta_z = plMover->GetPositionZ() - movementInfo.GetPos()->z;
+
+				 float anti_pspeed = sqrt(delta_x * delta_x + delta_y * delta_y);
+				 float anti_dspeed = plMover->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
+
+				 if (anti_pspeed > anti_dspeed){
+					 plMover->m_anti_alarmcount++;
+					 plMover->m_anti_lastalarmtime = CurTime;
+				 } else {
+					 if (plMover->m_anti_alarmcount > 0){
+						 plMover->m_anti_alarmcount--;
+					 }
+				 }
+				 if (plMover->m_anti_alarmcount > 3){
+					 plMover->m_anti_alarmcount = 0;
+					 CharacterDatabase.PExecute("INSERT INTO cheaters (player,acctid,reason,speed,count,first_date,last_date,`Op`,Val1,Val2,Map,Pos,Level) "
+                                   "VALUES ('%s','%u','%s','%f','1',NOW(),NOW(),'%s','%f','%u','%u','%s','%u')",
+								   plMover->GetName(),0,"Speed",0.0f,"",0.0f,0,0,
+                                   "",plMover->getLevel());
+				 }
+			 }
+		 }
+
+		 plMover->m_anti_lastmovetime = CurTime;
+
+	 }
+
+
     /* process position-change */
     movementInfo.UpdateTime(getMSTime());
 

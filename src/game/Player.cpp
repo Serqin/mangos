@@ -438,6 +438,11 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     rest_type=REST_TYPE_NO;
     ////////////////////Rest System/////////////////////
 
+	// ANTICHEAT
+	m_anti_lastmovetime = 0;
+	m_anti_lastalarmtime = 0;    //last time when alarm generated
+	m_anti_alarmcount = 0;       //alarm counter
+
     m_mailsUpdated = false;
     unReadMails = 0;
     m_nextMailDelivereTime = 0;

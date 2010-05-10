@@ -2500,6 +2500,12 @@ class MANGOS_DLL_SPEC Player : public Unit
         RestType rest_type;
         ////////////////////Rest System/////////////////////
 
+		// ANTICHEAT
+		uint32 m_anti_lastmovetime;
+		uint32 m_anti_lastalarmtime;    //last time when alarm generated
+		uint32 m_anti_alarmcount;       //alarm counter
+
+
         // Transports
         Transport * m_transport;
 
