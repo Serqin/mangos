@@ -1813,7 +1813,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if ((*itr)->GetSpellProto()->SpellIconID == 1989)
                     {
                         // saved rage top stored in next affect
-                        uint32 save_rage = (*itr)->GetSpellProto()->CalculateSimpleValue(1)*10;
+                        uint32 save_rage = (*itr)->GetSpellProto()->CalculateSimpleValue(EFFECT_INDEX_1)*10;
 
                         if (new_rage < save_rage)
                             new_rage = save_rage;
