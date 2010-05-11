@@ -298,7 +298,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     }
 
     /*----------------------*/
-
+/*
 	 if (plMover->GetTypeId() == TYPEID_PLAYER){
 		 const uint32 CurTime = getMSTime();
 
@@ -343,7 +343,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 		 plMover->m_anti_lastmovetime = CurTime;
 
 	 }
-
+*/
 
     /* process position-change */
     movementInfo.UpdateTime(getMSTime());
