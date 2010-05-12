@@ -2369,13 +2369,13 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             // not use ammo and not allow use
                             ((Player*)m_target)->RemoveAmmo();
                         return;
+                    case 48025:                             // Headless Horseman's Mount
+                        Spell::SelectMountByAreaAndSkill(m_target, 51621, 48024, 51617, 48023, 0);
+                        return;
                     case 62061:                             // Festive Holiday Mount
                         if (m_target->HasAuraType(SPELL_AURA_MOUNTED))
                             // Reindeer Transformation
                             m_target->CastSpell(m_target, 25860, true, NULL, this);
-                        return;
-                    case 48025:                             // Headless Horseman's Mount
-                        Spell::SelectMountByAreaAndSkill(m_target, 51621, 48024, 51617, 48023, 0);
                         return;
                     case 63624:                             // Learn a Second Talent Specialization
                         // Teach Learn Talent Specialization Switches, required for client triggered casts, allow after 30 sec delay
