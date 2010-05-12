@@ -2549,7 +2549,7 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttack
     // parry & block chances
 
     // check if attack comes from behind, nobody can parry or block if attacker is behind
-    if (!pVictim->HasInArc(M_PI_F,this) && !pVictim->HasAura(19263))
+    if (!pVictim->HasInArc(M_PI_F,this))
     {
         DEBUG_LOG ("RollMeleeOutcomeAgainst: attack came from behind.");
     }
