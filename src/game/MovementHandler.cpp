@@ -298,12 +298,12 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     }
 
     /*----------------------*/
-/*
+
 	 if (GetPlayer()){
 		 const uint32 CurTime = getMSTime();
 		 
 		 bool pass_anti_check = false;
-		 if (plMover->m_transport){
+		 if (GetPlayer()->m_transport){
              float trans_rad = movementInfo.GetTransportPos()->x*movementInfo.GetTransportPos()->x + movementInfo.GetTransportPos()->y*movementInfo.GetTransportPos()->y + movementInfo.GetTransportPos()->z*movementInfo.GetTransportPos()->z;
 			 if (trans_rad < 3600.0f) // transport radius = 60 yards //cheater with on_transport_flag
 				 pass_anti_check = true;
@@ -337,7 +337,6 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 						 GetPlayer()->m_anti_alarmcount--;
 					 }
 				 }
-				 GetPlayer()->GetName()
 				 if (GetPlayer()->m_anti_alarmcount > 3){
 					 GetPlayer()->m_anti_alarmcount = 0;
 					 CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
@@ -350,7 +349,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 		 GetPlayer()->m_anti_lastmovetime = CurTime;
 
 	 }
-*/
+
     /* process position-change */
     movementInfo.UpdateTime(getMSTime());
 
