@@ -298,15 +298,22 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     }
 
     /*----------------------*/
-/*
-	 if (plMover->GetTypeId() == TYPEID_PLAYER){
+
+	 if (GetPlayer()){
 		 const uint32 CurTime = getMSTime();
+		 
+		 bool pass_anti_check = false;
+		 if (plMover->m_transport){
+             float trans_rad = movementInfo.GetTransportPos()->x*movementInfo.GetTransportPos()->x + movementInfo.GetTransportPos()->y*movementInfo.GetTransportPos()->y + movementInfo.GetTransportPos()->z*movementInfo.GetTransportPos()->z;
+			 if (trans_rad < 3600.0f) // transport radius = 60 yards //cheater with on_transport_flag
+				 pass_anti_check = true;
+		 }
 
-		 if (CurTime > plMover->m_anti_lastmovetime && plMover->m_anti_lastmovetime 
+		 if (CurTime > GetPlayer()->m_anti_lastmovetime && GetPlayer()->m_anti_lastmovetime 
 			 && !(movementInfo.GetMovementFlags() & (MOVEFLAG_FALLINGFAR | MOVEFLAG_SAFE_FALL))
-			 && plMover->GetZoneId() != 2257){
+			 && !pass_anti_check){
 
-			 float delta_t = getMSTimeDiff(plMover->m_anti_lastmovetime,CurTime);
+			 float delta_t = getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
 
 			 if (delta_t > 100) {
 				 UnitMoveType move_type;
@@ -315,35 +322,33 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				 else if (movementInfo.GetMovementFlags() & MOVEFLAG_WALK_MODE) move_type = MOVE_WALK;
 				 else move_type = MOVE_RUN;
 
-				 float delta_x = plMover->GetPositionX() - movementInfo.GetPos()->x;
-				 float delta_y = plMover->GetPositionY() - movementInfo.GetPos()->y;
-				 //float delta_z = plMover->GetPositionZ() - movementInfo.GetPos()->z;
+				 float delta_x = GetPlayer()->GetPositionX() - movementInfo.GetPos()->x;
+				 float delta_y = GetPlayer()->GetPositionY() - movementInfo.GetPos()->y;
+				 //float delta_z = GetPlayer()->GetPositionZ() - movementInfo.GetPos()->z;
 
 				 float anti_pspeed = sqrt(delta_x * delta_x + delta_y * delta_y);
-				 float anti_dspeed = plMover->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
+				 float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
 
 				 if (anti_pspeed > anti_dspeed){
-					 plMover->m_anti_alarmcount++;
-					 plMover->m_anti_lastalarmtime = CurTime;
+					 GetPlayer()->m_anti_alarmcount++;
+					 GetPlayer()->m_anti_lastalarmtime = CurTime;
 				 } else {
-					 if (plMover->m_anti_alarmcount > 0){
-						 plMover->m_anti_alarmcount--;
+					 if (GetPlayer()->m_anti_alarmcount > 0){
+						 GetPlayer()->m_anti_alarmcount--;
 					 }
 				 }
-				 if (plMover->m_anti_alarmcount > 3){
-					 plMover->m_anti_alarmcount = 0;
-					 CharacterDatabase.PExecute("INSERT INTO cheaters (player,acctid,reason,speed,count,first_date,last_date,`Op`,Val1,Val2,Map,Pos,Level) "
-                                   "VALUES ('%s','%u','%s','%f','1',NOW(),NOW(),'%s','%f','%u','%u','%s','%u')",
-								   plMover->GetName(),0,"Speed",0.0f,"",0.0f,0,0,
-                                   "",plMover->getLevel());
+				 if (GetPlayer()->m_anti_alarmcount > 3){
+					 GetPlayer()->m_anti_alarmcount = 0;
+					 CharacterDatabase.PExecute("INSERT INTO cheater(character,count, first_date, last_date, reason) "
+                                   "VALUES ('%s','%u',NOW(),NOW(),'%s')",
+								   GetPlayer()->GetName(),0,"Speed");
 				 }
 			 }
 		 }
 
-		 plMover->m_anti_lastmovetime = CurTime;
+		 GetPlayer()->m_anti_lastmovetime = CurTime;
 
 	 }
-*/
 
     /* process position-change */
     movementInfo.UpdateTime(getMSTime());
