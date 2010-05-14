@@ -329,7 +329,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				 float anti_pspeed = sqrt(delta_x * delta_x + delta_y * delta_y);
 				 float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
 
-				 if (anti_pspeed > anti_dspeed){
+				 if (anti_pspeed > anti_dspeed && GetPlayer()->GetZoneId() != 2257){
 					 GetPlayer()->m_anti_alarmcount++;
 					 GetPlayer()->m_anti_lastalarmtime = CurTime;
 				 } else {
@@ -339,7 +339,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				 }
 				 if (GetPlayer()->m_anti_alarmcount > 3){
 					 GetPlayer()->m_anti_alarmcount = 0;
-					 CharacterDatabase.PExecute("INSERT INTO cheater(character,count, first_date, last_date, reason) "
+					 CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
                                    "VALUES ('%s','%u',NOW(),NOW(),'%s')",
 								   GetPlayer()->GetName(),0,"Speed");
 				 }
