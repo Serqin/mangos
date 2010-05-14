@@ -325,23 +325,25 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				 float delta_x = GetPlayer()->GetPositionX() - movementInfo.GetPos()->x;
 				 float delta_y = GetPlayer()->GetPositionY() - movementInfo.GetPos()->y;
 				 //float delta_z = GetPlayer()->GetPositionZ() - movementInfo.GetPos()->z;
+				 float delta_pos = delta_x * delta_x + delta_y * delta_y;
+				 if (delta_pos > 0){
+					 float anti_pspeed = sqrt(delta_pos);
+					 float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
 
-				 float anti_pspeed = sqrt(delta_x * delta_x + delta_y * delta_y);
-				 float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
-
-				 if (anti_pspeed > anti_dspeed && GetPlayer()->GetZoneId() != 2257){
-					 GetPlayer()->m_anti_alarmcount++;
-					 GetPlayer()->m_anti_lastalarmtime = CurTime;
-				 } else {
-					 if (GetPlayer()->m_anti_alarmcount > 0){
-						 GetPlayer()->m_anti_alarmcount--;
+					 if (anti_pspeed > anti_dspeed && GetPlayer()->GetZoneId() != 2257){
+						 GetPlayer()->m_anti_alarmcount++;
+						 GetPlayer()->m_anti_lastalarmtime = CurTime;
+					 } else {
+						 if (GetPlayer()->m_anti_alarmcount > 0){
+							 GetPlayer()->m_anti_alarmcount--;
+						 }
 					 }
-				 }
-				 if (GetPlayer()->m_anti_alarmcount > 3){
-					 GetPlayer()->m_anti_alarmcount = 0;
-					 CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
-                                   "VALUES ('%s','%u',NOW(),NOW(),'%s')",
-								   GetPlayer()->GetName(),0,"Speed");
+					 if (GetPlayer()->m_anti_alarmcount > 3){
+						 GetPlayer()->m_anti_alarmcount = 0;
+						 CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
+									   "VALUES ('%s','%u',NOW(),NOW(),'%s')",
+									   GetPlayer()->GetName(),0,"Speed");
+					 }
 				 }
 			 }
 		 }
