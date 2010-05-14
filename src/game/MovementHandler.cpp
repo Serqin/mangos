@@ -298,7 +298,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     }
 
     /*----------------------*/
-
+/*
 	 if (GetPlayer()){
 		 const uint32 CurTime = getMSTime();
 		 
@@ -337,11 +337,12 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 						 GetPlayer()->m_anti_alarmcount--;
 					 }
 				 }
+				 GetPlayer()->GetName()
 				 if (GetPlayer()->m_anti_alarmcount > 3){
 					 GetPlayer()->m_anti_alarmcount = 0;
-					/* CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
+					 CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
 								   "VALUES ('%s','%u',NOW(),NOW(),'%s')",
-								   GetPlayer()->GetName(),0,"Speed");*/
+								   GetPlayer()->GetName(),0,"Speed");
 				 }
 			 }
 		 }
@@ -349,7 +350,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 		 GetPlayer()->m_anti_lastmovetime = CurTime;
 
 	 }
-
+*/
     /* process position-change */
     movementInfo.UpdateTime(getMSTime());
 
