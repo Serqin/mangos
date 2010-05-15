@@ -311,44 +311,45 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 
 		 if (CurTime > GetPlayer()->m_anti_lastmovetime && GetPlayer()->m_anti_lastmovetime 
 			 && !(movementInfo.GetMovementFlags() & (MOVEFLAG_FALLINGFAR | MOVEFLAG_SAFE_FALL))
-			 && !pass_anti_check){
+			 && !pass_anti_check && plMover)
+		 {
 
-			 float delta_t = getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
+			float delta_t = getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
 
-			 if (delta_t > 100) {
-				 UnitMoveType move_type;
-				 if (movementInfo.GetMovementFlags() & MOVEFLAG_FLYING) move_type = MOVE_FLIGHT;
-				 else if (movementInfo.GetMovementFlags() & MOVEFLAG_SWIMMING) move_type = MOVE_SWIM;
-				 else if (movementInfo.GetMovementFlags() & MOVEFLAG_WALK_MODE) move_type = MOVE_WALK;
-				 else move_type = MOVE_RUN;
+			if (delta_t > 100 && delta_t < 2000) {
+				UnitMoveType move_type;
+				if (movementInfo.GetMovementFlags() & MOVEFLAG_FLYING) move_type = MOVE_FLIGHT;
+				else if (movementInfo.GetMovementFlags() & MOVEFLAG_SWIMMING) move_type = MOVE_SWIM;
+				else if (movementInfo.GetMovementFlags() & MOVEFLAG_WALK_MODE) move_type = MOVE_WALK;
+				else move_type = MOVE_RUN;
 
-				 float delta_x = GetPlayer()->GetPositionX() - movementInfo.GetPos()->x;
-				 float delta_y = GetPlayer()->GetPositionY() - movementInfo.GetPos()->y;
-				 //float delta_z = GetPlayer()->GetPositionZ() - movementInfo.GetPos()->z;
+				float delta_x = GetPlayer()->GetPositionX() - movementInfo.GetPos()->x;
+				float delta_y = GetPlayer()->GetPositionY() - movementInfo.GetPos()->y;
+				//float delta_z = GetPlayer()->GetPositionZ() - movementInfo.GetPos()->z;
 
-				 float anti_pspeed = sqrt(delta_x * delta_x + delta_y * delta_y);
-				 float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
+				float anti_pspeed = sqrt(delta_x * delta_x + delta_y * delta_y);
+				float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 1.0f;
 
-				 if (anti_pspeed > anti_dspeed && GetPlayer()->GetZoneId() != 2257){
-					 GetPlayer()->m_anti_alarmcount++;
-					 GetPlayer()->m_anti_lastalarmtime = CurTime;
-				 } else {
-					 if (GetPlayer()->m_anti_alarmcount > 0){
-						 GetPlayer()->m_anti_alarmcount--;
-					 }
-				 }
-				 if (GetPlayer()->m_anti_alarmcount > 3){
-					 GetPlayer()->m_anti_alarmcount = 0;
-					 CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
-								   "VALUES ('%s','%u',NOW(),NOW(),'%s')",
-								   GetPlayer()->GetName(),0,"Speed");
-				 }
-			 }
-		 }
+				if (anti_pspeed > anti_dspeed && GetPlayer()->GetZoneId() != 2257){
+					GetPlayer()->m_anti_alarmcount++;
+					GetPlayer()->m_anti_lastalarmtime = CurTime;
+				} else {
+					if (GetPlayer()->m_anti_alarmcount > 0){
+						GetPlayer()->m_anti_alarmcount--;
+					}
+				}
+				if (GetPlayer()->m_anti_alarmcount > 3){
+					GetPlayer()->m_anti_alarmcount = 0;
+					CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
+								  "VALUES ('%s','%u',NOW(),NOW(),'%s')",
+								  GetPlayer()->GetName(),0,"Speed");
+				}
+			}
+		}
 
-		 GetPlayer()->m_anti_lastmovetime = CurTime;
+		GetPlayer()->m_anti_lastmovetime = CurTime;
 
-	 }
+	}
 
     /* process position-change */
     movementInfo.UpdateTime(getMSTime());
