@@ -173,6 +173,8 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
                 {
                     DoScriptText(EMOTE_TELEPORT, m_creature);
                     m_creature->GetMotionMaster()->MoveIdle();
+                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_uiPhaseTimer = 70000;
                     m_uiPhase = PHASE_BALCONY;
                     ++m_uiPhaseSub;
@@ -243,6 +245,8 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
                 if (DoCastSpellIfCan(m_creature, SPELL_TELEPORT_RETURN) == CAST_OK)
                 {
                     DoScriptText(EMOTE_TELEPORT_RETURN, m_creature);
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                     m_uiPhaseTimer = 90000;
                     m_uiPhase = PHASE_GROUND;
