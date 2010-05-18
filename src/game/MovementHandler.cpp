@@ -339,9 +339,10 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 			GetPlayer()->m_anti_distanceLen += anti_pspeed;
 			GetPlayer()->m_anti_distanceNormalLen += anti_dspeed;
 
-			if (GetPlayer()->m_anti_nextCheck <= 0 && delta_t > 490){
+			if (GetPlayer()->m_anti_nextCheck <= 0){
 
 				float DifAdd = float ((GetPlayer()->m_anti_nextCheck * -1) + 500) / IN_MILLISECONDS;
+				DifAdd += 1.0f;
 
 				if (GetPlayer()->m_anti_shouldReport){
 					if (GetPlayer()->m_anti_lastDif + (GetPlayer()->m_anti_distanceNormalLen - GetPlayer()->m_anti_distanceLen) < (DifAdd * -1.0f)){
