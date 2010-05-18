@@ -440,13 +440,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
 
 	// ANTICHEAT
 	m_anti_lastmovetime = 0;
-	m_anti_lastalarmtime = 0;    //last time when alarm generated
 	m_anti_alarmcount = 0;       //alarm counter
-	m_anti_nextCheck = 0;
-	m_anti_distanceLen = 0.0f;
-	m_anti_distanceNormalLen = 0.0f;
-	m_anti_lastDif = 1.0f;
-	m_anti_shouldReport = false;
 
     m_mailsUpdated = false;
     unReadMails = 0;

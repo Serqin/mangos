@@ -316,8 +316,10 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 			 && !(movementInfo.GetMovementFlags() & (MOVEFLAG_FALLINGFAR | MOVEFLAG_SAFE_FALL))
 			 && !pass_anti_check && plMover && GetPlayer()->GetZoneId() != 2257)
         {
+			float delta_t = getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
+			
+			UnitMoveType move_type;
 
-            UnitMoveType move_type;
 			if (movementInfo.GetMovementFlags() & MOVEFLAG_FLYING)
 				move_type = MOVE_FLIGHT;
 			else if (movementInfo.GetMovementFlags() & MOVEFLAG_SWIMMING)
@@ -326,63 +328,28 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				move_type = MOVE_WALK;
 			else move_type = MOVE_RUN;
 
-			float delta_t = getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
-
 			float delta_x = GetPlayer()->GetPositionX() - movementInfo.GetPos()->x;
 			float delta_y = GetPlayer()->GetPositionY() - movementInfo.GetPos()->y;
-			//float delta_z = GetPlayer()->GetPositionZ() - movementInfo.GetPos()->z;
 
 			float anti_pspeed = sqrt(delta_x * delta_x + delta_y * delta_y);
-			float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS);
+			float anti_dspeed = GetPlayer()->GetSpeed(move_type) * (delta_t / IN_MILLISECONDS) + 0.5f;
 
-			GetPlayer()->m_anti_nextCheck -= delta_t;
-			GetPlayer()->m_anti_distanceLen += anti_pspeed;
-			GetPlayer()->m_anti_distanceNormalLen += anti_dspeed;
+			if (delta_t > 0.0f){
+				if (anti_pspeed > anti_dspeed){
+					GetPlayer()->m_anti_alarmcount++;
 
-			if (GetPlayer()->m_anti_nextCheck <= 0){
-
-				float DifAdd = float ((GetPlayer()->m_anti_nextCheck * -1) + 500) / IN_MILLISECONDS;
-				DifAdd += 1.0f;
-
-				if (GetPlayer()->m_anti_shouldReport){
-					if (GetPlayer()->m_anti_lastDif + (GetPlayer()->m_anti_distanceNormalLen - GetPlayer()->m_anti_distanceLen) < (DifAdd * -1.0f)){
-						GetPlayer()->m_anti_alarmcount++;
-						if (GetPlayer()->m_anti_alarmcount > 1) {
-							CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
+					if (GetPlayer()->m_anti_alarmcount > 7){
+						CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
 								  "VALUES ('%s','%u',NOW(),NOW(),'%s')",
 								  GetPlayer()->GetName(),0,"Speed");
-							//sWorld.SendServerMessage(SERVER_MSG_STRING, "You have been reported for speed hack", GetPlayer());
-							GetPlayer()->m_anti_alarmcount = 0;
-						}
+						GetPlayer()->m_anti_alarmcount = 0;
 					}
-					GetPlayer()->m_anti_shouldReport = false;
-				}
-				float speedToCheck;
 
-				if (GetPlayer()->m_anti_lastDif > 0.0f)
-				{
-					speedToCheck = GetPlayer()->m_anti_distanceLen - GetPlayer()->m_anti_lastDif;
+				} else {
+					if (GetPlayer()->m_anti_alarmcount > 0){
+						GetPlayer()->m_anti_alarmcount--;
+					}
 				}
-				else
-				{
-					speedToCheck = GetPlayer()->m_anti_distanceLen;
-				}
-
-				if (speedToCheck > GetPlayer()->m_anti_distanceNormalLen + DifAdd)
-				{
-					GetPlayer()->m_anti_shouldReport = true;
-				}
-				else
-				{
-					GetPlayer()->m_anti_alarmcount = 0;
-				}
-				
-				GetPlayer()->m_anti_lastDif = GetPlayer()->m_anti_distanceNormalLen - GetPlayer()->m_anti_distanceLen;
-
-				GetPlayer()->m_anti_nextCheck = 0;
-				GetPlayer()->m_anti_distanceLen = 0.0f;
-				GetPlayer()->m_anti_distanceNormalLen = 0.0f;
-				GetPlayer()->m_anti_nextCheck = 500;
 			}
 
 			if (anti_pspeed > 100.0f){
@@ -392,8 +359,6 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				//sWorld.SendServerMessage(SERVER_MSG_STRING, "You have been reported for teleport hack", GetPlayer());
 			}
 
-		} else {
-			GetPlayer()->m_anti_distanceLen = 0.0f;
 		}
 
 		GetPlayer()->m_anti_lastmovetime = CurTime;
