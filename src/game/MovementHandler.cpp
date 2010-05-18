@@ -351,7 +351,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 							CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
 								  "VALUES ('%s','%u',NOW(),NOW(),'%s')",
 								  GetPlayer()->GetName(),0,"Speed");
-							sWorld.SendServerMessage(SERVER_MSG_STRING, "You have been reported for speed hack", GetPlayer());
+							//sWorld.SendServerMessage(SERVER_MSG_STRING, "You have been reported for speed hack", GetPlayer());
 							GetPlayer()->m_anti_alarmcount = 0;
 						}
 					}
@@ -389,7 +389,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
 								  "VALUES ('%s','%u',NOW(),NOW(),'%s')",
 								  GetPlayer()->GetName(),0,"Teleport");
-				sWorld.SendServerMessage(SERVER_MSG_STRING, "You have been reported for teleport hack", GetPlayer());
+				//sWorld.SendServerMessage(SERVER_MSG_STRING, "You have been reported for teleport hack", GetPlayer());
 			}
 
 		} else {
