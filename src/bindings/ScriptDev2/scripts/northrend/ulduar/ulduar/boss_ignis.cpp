@@ -52,7 +52,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
         if (ScorchTimer < diff)
         {
 			DoCastSpellIfCan(m_creature, SPELL_SCORCH);
-            ScorchTimer = urand(20000, 30000);
+            ScorchTimer = urand(10000, 20000);
         }
         else ScorchTimer -= diff;
 
@@ -63,14 +63,14 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
         }
         else FlameJetsTimer -= diff;
 
-        if (SlagPotTimer < diff)
+        /*if (SlagPotTimer < diff)
         {
             Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
             if(target && target->isAlive())
 				DoCastSpellIfCan(target, SPELL_SLAG_POT);
             SlagPotTimer =  urand(10000, 20000);
         }
-        else SlagPotTimer -= diff;
+        else SlagPotTimer -= diff;*/
 
         DoMeleeAttackIfReady();
     }

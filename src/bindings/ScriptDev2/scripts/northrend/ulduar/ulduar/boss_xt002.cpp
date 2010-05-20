@@ -87,9 +87,7 @@ struct MANGOS_DLL_DECL boss_xt002 : public ScriptedAI
 
         if(GravityTimer < diff)
         {
-            Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
-            if(target && target->isAlive())
-				DoCastSpellIfCan(target, SPELL_GRAVITY);
+			DoCastSpellIfCan(m_creature, SPELL_GRAVITY);
             GravityTimer = urand(10000,15000);
         }
         else GravityTimer -= diff;
