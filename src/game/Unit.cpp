@@ -7633,7 +7633,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                     if ((*i)->GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARLOCK && (*i)->GetSpellProto()->SpellIconID == 113)
                     {
                         // basepoints of trigger spell stored in dummyeffect of spellProto
-                        int32 basepoints = (GetMaxPower(POWER_MANA) * ((*i)->GetSpellProto()->EffectBasePoints[2]+1))/100.0f;
+                        int32 basepoints = GetMaxPower(POWER_MANA) * (*i)->GetSpellProto()->CalculateSimpleValue(EFFECT_INDEX_2) / 100;
                         CastCustomSpell(this, 18371, &basepoints, NULL, NULL, true, castItem, triggeredByAura);
                         break;
                     }
@@ -9416,15 +9416,7 @@ uint32 Unit::SpellDamageBonusDone(Unit *pVictim, SpellEntry const *spellProto, u
             break;
         }
         case SPELLFAMILY_WARLOCK:
-        {
-            // Drain Soul
-            if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000000004000))
-            {
-                if (pVictim->GetHealth() * 100 / pVictim->GetMaxHealth() <= 25)
-                    DoneTotalMod *= 4;
-            }
             break;
-        }
         case SPELLFAMILY_PRIEST:
         {
             // Glyph of Smite
