@@ -343,7 +343,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 								  "VALUES ('%s','%u',NOW(),NOW(),'%s')",
 								  GetPlayer()->GetName(),0,"Speed");
 						GetPlayer()->m_anti_alarmcount = 0;
-						GetPlayer()->SetMovement(MOVE_ROOT);
+						//GetPlayer()->SetMovement(MOVE_ROOT);
 					}
 
 				} else {
@@ -357,9 +357,9 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 				CharacterDatabase.PExecute("INSERT INTO cheater(`character`,`count`, `first_date`, `last_date`, `reason`) "
 								  "VALUES ('%s','%u',NOW(),NOW(),'%s')",
 								  GetPlayer()->GetName(),0,"Teleport");
-				GetPlayer()->ResurrectPlayer(0.5f, true);
-				GetPlayer()->SpawnCorpseBones();
-				GetPlayer()->TeleportToHomebind();
+				//GetPlayer()->ResurrectPlayer(0.5f, true);
+				//GetPlayer()->SpawnCorpseBones();
+				//GetPlayer()->TeleportToHomebind();
 				//sWorld.SendServerMessage(SERVER_MSG_STRING, "You have been reported for teleport hack", GetPlayer());
 			}
 
