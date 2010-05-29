@@ -300,11 +300,7 @@ void SpellCastTargets::write( ByteBuffer& data ) const
 
     if( m_targetMask & TARGET_FLAG_DEST_LOCATION )
     {
-        if(m_unitTarget)
-            data << m_unitTarget->GetPackGUID();
-        else
-            data << uint8(0);
-
+        data << uint8(0);                                   // no known cases with target pguid
         data << m_destX << m_destY << m_destZ;
     }
 
@@ -1462,6 +1458,8 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 31347:                                 // Doom TODO: exclude top threat target from target selection
                 case 33711:                                 // Murmur's Touch
                 case 38794:                                 // Murmur's Touch (h)
+                case 50988:                                 // Glare of the Tribunal (Halls of Stone)
+                case 59870:                                 // Glare of the Tribunal (h) (Halls of Stone)
                     unMaxTargets = 1;
                     break;
                 case 28542:                                 // Life Drain
@@ -3935,10 +3933,7 @@ void Spell::TakeCastItem()
         ((Player*)m_caster)->DestroyItemCount(m_CastItem, count, true);
 
         // prevent crash at access to deleted m_targets.getItemTarget
-        if(m_CastItem == m_targets.getItemTarget())
-            m_targets.setItemTarget(NULL);
-
-        m_CastItem = NULL;
+        ClearCastItem();
     }
 }
 
@@ -6729,8 +6724,10 @@ void Spell::SelectMountByAreaAndSkill(Unit* target, uint32 spellId75, uint32 spe
 
                             // speed higher than 280 replace it
                             if (mountSpeed > 280)
+                            {
                                 target->CastSpell(target, spellIdSpecial, true);
-                            return;
+                                return;
+                            }
                         }
                     }
                 }
@@ -6746,4 +6743,12 @@ void Spell::SelectMountByAreaAndSkill(Unit* target, uint32 spellId75, uint32 spe
         target->CastSpell(target, spellId75, true);
 
     return;
+}
+
+void Spell::ClearCastItem()
+{
+    if (m_CastItem==m_targets.getItemTarget())
+        m_targets.setItemTarget(NULL);
+
+    m_CastItem = NULL;
 }
