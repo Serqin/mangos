@@ -8,13 +8,14 @@
 extern void AddSC_battleground();
 
 //custom
-extern void AddSC_Lavi();
 extern void AddSC_boss_bronjahm();
 extern void AddSC_boss_devourer_of_souls();
 extern void AddSC_boss_forgemaster_gafrost();
 extern void AddSC_boss_ick();
 extern void AddSC_boss_scourgelord_tyrannus();
 extern void AddSC_instance_forge_of_souls();
+extern void AddSC_boss_lord_marrowgar();
+extern void AddSC_instance_icecrown();
 
 //examples
 extern void AddSC_example_creature();
@@ -425,13 +426,15 @@ void AddScripts()
     AddSC_battleground();
 
     //custom
-	AddSC_Lavi();
 	AddSC_boss_bronjahm();
 	AddSC_boss_devourer_of_souls();
 	AddSC_boss_forgemaster_gafrost();
 	AddSC_boss_ick();
 	AddSC_boss_scourgelord_tyrannus();
 	AddSC_instance_forge_of_souls();
+	//icc raid
+	AddSC_boss_lord_marrowgar();
+	AddSC_instance_icecrown();
 
     //examples
     AddSC_example_creature();
