@@ -366,6 +366,8 @@ scripts/northrend/icecrown_citadel/icecrown_citadel/boss_sindragosa.cpp \
 scripts/northrend/icecrown_citadel/icecrown_citadel/boss_the_lich_king.cpp \
 scripts/northrend/icecrown_citadel/icecrown_citadel/boss_valithria_dreamwalker.cpp \
 scripts/northrend/icecrown_citadel/icecrown_citadel/gunship_battle.cpp \
+scripts/northrend/icecrown_citadel/icecrown_citadel/instance_icecrown.cpp \
+scripts/northrend/icecrown_citadel/icecrown_citadel/def_spire.h \
 scripts/northrend/naxxramas/boss_anubrekhan.cpp \
 scripts/northrend/naxxramas/boss_faerlina.cpp \
 scripts/northrend/naxxramas/boss_four_horsemen.cpp \
