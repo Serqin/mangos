@@ -241,8 +241,6 @@ struct MANGOS_DLL_DECL mob_bone_spikeAI : public ScriptedAI
 
     void Reset()
     {
-        SetCombatMovement(false);
-        m_creature->SetInCombatWithZone();
         pVictim = NULL;
     }
 
@@ -251,7 +249,8 @@ struct MANGOS_DLL_DECL mob_bone_spikeAI : public ScriptedAI
         if (!pVictim && pWho)  {
                         pVictim = pWho;
                         m_creature->SetInCombatWith(pVictim);
-						DoCastSpellIfCan(pVictim, SPELL_BONE_STRIKE_IMPALE);
+                        m_creature->SetSpeedRate(MOVE_RUN, 5.0f);
+                        m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                         }
     }
 
@@ -275,9 +274,26 @@ struct MANGOS_DLL_DECL mob_bone_spikeAI : public ScriptedAI
     {
         if(m_pInstance && m_pInstance->GetData(TYPE_MARROWGAR) != IN_PROGRESS)
         {
-        if (pVictim) pVictim->RemoveAurasDueToSpell(SPELL_BONE_STRIKE_IMPALE);
+            if (pVictim) pVictim->RemoveAurasDueToSpell(SPELL_BONE_STRIKE_IMPALE);
+                m_creature->ForcedDespawn();
+        }
+
+        if (!pVictim) return;
+
+		if(pVictim && !pVictim->isAlive())
+        {
+			pVictim->RemoveAurasDueToSpell(SPELL_BONE_STRIKE_IMPALE);
             m_creature->ForcedDespawn();
         }
+
+		if(m_creature->IsWithinDistInMap(pVictim, 1.0f) &&
+             !pVictim->HasAura(SPELL_BONE_STRIKE_IMPALE))
+        {
+			DoCastSpellIfCan(pVictim, SPELL_BONE_STRIKE_IMPALE);
+            m_creature->GetMotionMaster()->Clear();
+            SetCombatMovement(false);
+        }
+
     }
 
 };

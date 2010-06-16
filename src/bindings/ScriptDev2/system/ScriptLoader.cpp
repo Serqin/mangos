@@ -16,6 +16,7 @@ extern void AddSC_boss_scourgelord_tyrannus();
 extern void AddSC_instance_forge_of_souls();
 extern void AddSC_boss_lord_marrowgar();
 extern void AddSC_instance_icecrown();
+extern void AddSC_boss_lady_deathwhisper();
 
 //examples
 extern void AddSC_example_creature();
@@ -436,6 +437,7 @@ void AddScripts()
 	//icc raid
 	AddSC_boss_lord_marrowgar();
 	AddSC_instance_icecrown();
+	AddSC_boss_lady_deathwhisper();
 
     //examples
     AddSC_example_creature();
