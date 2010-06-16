@@ -1032,6 +1032,60 @@ struct BGData
     bool HasTaxiPath() const { return taxiPath[0] && taxiPath[1]; }
 };
 
+class TradeData
+{
+    public:                                                 // constructors
+        TradeData(Player* player, Player* trader) :
+            m_player(player),  m_trader(trader), m_accepted(false), m_acceptProccess(false),
+            m_money(0), m_spell(0) {}
+
+    public:                                                 // access functions
+
+        Player* GetTrader() const { return m_trader; }
+        TradeData* GetTraderData() const;
+
+        Item* GetItem(TradeSlots slot) const;
+        bool HasItem(ObjectGuid item_guid) const;
+
+        uint32 GetSpell() const { return m_spell; }
+        Item*  GetSpellCastItem() const;
+        bool HasSpellCastItem() const { return !m_spellCastItem.IsEmpty(); }
+
+        uint32 GetMoney() const { return m_money; }
+
+        bool IsAccepted() const { return m_accepted; }
+        bool IsInAcceptProcess() const { return m_acceptProccess; }
+    public:                                                 // access functions
+
+        void SetItem(TradeSlots slot, Item* item);
+        void SetSpell(uint32 spell_id, Item* castItem = NULL);
+        void SetMoney(uint32 money);
+
+        void SetAccepted(bool state, bool crosssend = false);
+
+        // must be called only from accept handler helper functions
+        void SetInAcceptProcess(bool state) { m_acceptProccess = state; }
+
+    private:                                                // internal functions
+
+        void Update(bool for_trader = true);
+
+    private:                                                // fields
+
+        Player*    m_player;                                // Player who own of this TradeData
+        Player*    m_trader;                                // Player who trade with m_player
+
+        bool       m_accepted;                              // m_player press accept for trade list
+        bool       m_acceptProccess;                        // one from player/trader press accept and this processed
+
+        uint32     m_money;                                 // m_player place money to trade
+
+        uint32     m_spell;                                 // m_player apply spell to non-traded slot item
+        ObjectGuid m_spellCastItem;                         // applied spell casted by item use
+
+        ObjectGuid m_items[TRADE_SLOT_COUNT];               // traded itmes from m_player side including non-traded slot
+};
+
 class MANGOS_DLL_SPEC Player : public Unit
 {
     friend class WorldSession;
@@ -1086,8 +1140,6 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         Creature* GetNPCIfCanInteractWith(ObjectGuid guid, uint32 npcflagmask);
         GameObject* GetGameObjectIfCanInteractWith(ObjectGuid guid, uint32 gameobject_type = MAX_GAMEOBJECT_TYPE) const;
-
-        void UpdateVisibilityForPlayer();
 
         bool ToggleAFK();
         bool ToggleDND();
@@ -1196,7 +1248,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool IsValidPos( uint8 bag, uint8 slot, bool explicit_pos ) const;
         uint8 GetBankBagSlotCount() const { return GetByteValue(PLAYER_BYTES_2, 2); }
         void SetBankBagSlotCount(uint8 count) { SetByteValue(PLAYER_BYTES_2, 2, count); }
-        bool HasItemCount( uint32 item, uint32 count, bool inBankAlso = false ) const;
+        bool HasItemCount( uint32 item, uint32 count, bool inBankAlso = false) const;
         bool HasItemFitToSpellReqirements(SpellEntry const* spellInfo, Item const* ignoreItem = NULL);
         bool CanNoReagentCast(SpellEntry const* spellInfo) const;
         bool HasItemOrGemWithIdEquipped( uint32 item, uint32 count, uint8 except_slot = NULL_SLOT) const;
@@ -1293,10 +1345,10 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool BuyItemFromVendorSlot(uint64 vendorguid, uint32 vendorslot, uint32 item, uint8 count, uint8 bag, uint8 slot);
 
         float GetReputationPriceDiscount( Creature const* pCreature ) const;
-        Player* GetTrader() const { return pTrader; }
-        void ClearTrade();
+
+        Player* GetTrader() const { return m_trade ? m_trade->GetTrader() : NULL; }
+        TradeData* GetTradeData() const { return m_trade; }
         void TradeCancel(bool sendback);
-        Item* GetItemByTradeSlot(uint32 slot) const { return !m_tradeItems[slot].IsEmpty() ? GetItemByGuid(m_tradeItems[slot]) : NULL; }
 
         void UpdateEnchantTime(uint32 time);
         void UpdateItemDuration(uint32 time, bool realtimeonly=false);
@@ -1624,6 +1676,9 @@ class MANGOS_DLL_SPEC Player : public Unit
         PlayerSpellMap      & GetSpellMap()       { return m_spells; }
 
         SpellCooldowns const& GetSpellCooldownMap() const { return m_spellCooldowns; }
+
+        PlayerTalent const* GetKnownTalentById(int32 talentId) const;
+        SpellEntry const* GetKnownTalentRankById(int32 talentId) const;
 
         void AddSpellMod(SpellModifier* mod, bool apply);
         bool IsAffectedBySpellmod(SpellEntry const *spellInfo, SpellModifier *mod, Spell const* spell = NULL);
@@ -2150,7 +2205,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         /*********************************************************/
         bool HasMovementFlag(MovementFlags f) const;        // for script access to m_movementInfo.HasMovementFlag
         void UpdateFallInformationIfNeed(MovementInfo const& minfo,uint16 opcode);
-        Unit *m_mover;
         void SetFallInformation(uint32 time, float z)
         {
             m_lastFallTime = time;
@@ -2169,6 +2223,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         void SetClientControl(Unit* target, uint8 allowMove);
         void SetMover(Unit* target) { m_mover = target ? target : this; }
+        Unit* GetMover() const { return m_mover; }
+        bool IsSelfMover() const { return m_mover == this; }// normal case for player not controlling other unit
 
         void EnterVehicle(Vehicle *vehicle);
         void ExitVehicle(Vehicle *vehicle);
@@ -2209,7 +2265,6 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool HaveAtClient(WorldObject const* u) { return u==this || m_clientGUIDs.find(u->GetGUID())!=m_clientGUIDs.end(); }
 
-        WorldObject const* GetViewPoint() const;
         bool IsVisibleInGridForPlayer(Player* pl) const;
         bool IsVisibleGloballyFor(Player* pl) const;
 
@@ -2220,6 +2275,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         // Stealth detection system
         void HandleStealthedUnitsDetection();
+
+        Camera& GetCamera() { return m_camera; }
 
         uint8 m_forced_speed_changes[MAX_MOVE_TYPE];
 
@@ -2493,10 +2550,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         int m_cinematic;
 
-        Player *pTrader;
-        bool acceptTrade;
-        ObjectGuid m_tradeItems[TRADE_SLOT_COUNT];
-        uint32 tradeGold;
+        TradeData* m_trade;
 
         bool   m_DailyQuestChanged;
         bool   m_WeeklyQuestChanged;
@@ -2588,6 +2642,9 @@ class MANGOS_DLL_SPEC Player : public Unit
             if(operation < DELAYED_END)
                 m_DelayedOperations |= operation;
         }
+
+        Unit *m_mover;
+        Camera m_camera;
 
         GridReference<Player> m_gridRef;
         MapReference m_mapRef;
