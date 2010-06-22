@@ -370,7 +370,7 @@ void WorldSession::HandleMailReturnToSender(WorldPacket & recv_data )
 
     Player *pl = _player;
     Mail *m = pl->GetMail(mailId);
-    if(!m || m->state == MAIL_STATE_DELETED || m->deliver_time > time(NULL))
+	if(!m || m->state == MAIL_STATE_DELETED || m->deliver_time > time(NULL) || m->sender == 0)
     {
         pl->SendMailResult(mailId, MAIL_RETURNED_TO_SENDER, MAIL_ERR_INTERNAL_ERROR);
         return;
