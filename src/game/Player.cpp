@@ -12745,6 +12745,7 @@ void Player::PrepareGossipMenu(WorldObject *pSource, uint32 menuId)
                     if (!pCreature->isCanTrainingOf(this, false))
                         hasMenuItem = false;
                     break;
+                case GOSSIP_OPTION_DUAL_SPEC:
                 case GOSSIP_OPTION_UNLEARNTALENTS:
                     if (!pCreature->isCanTrainingAndResetTalentsOf(this))
                         hasMenuItem = false;
@@ -12922,6 +12923,7 @@ void Player::OnGossipSelect(WorldObject* pSource, uint32 gossipListId, uint32 me
 
     switch(gossipOptionId)
     {
+        case GOSSIP_OPTION_DUAL_SPEC:
         case GOSSIP_OPTION_GOSSIP:
         {
             if (pMenuData.m_gAction_poi)
