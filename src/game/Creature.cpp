@@ -1899,6 +1899,21 @@ Unit* Creature::SelectAttackingTarget(AttackingTarget target, uint32 position) c
             advance(r, position);
             return Unit::GetUnit(*this, (*r)->getUnitGuid());
         }
+        case ATTACKING_TARGET_RANDOM_PLAYER:
+        {
+            uint32 rpos = position + (rand() % (threatlist.size() - position));
+            Unit* uTemp;
+            advance(i, rpos);
+            while (rpos < threatlist.size())
+            {
+                uTemp = Unit::GetUnit(*this, (*i)->getUnitGuid());
+                if (uTemp && uTemp->GetTypeId() == TYPEID_PLAYER)
+				    return uTemp;
+                advance(i, 1);
+                rpos++;
+            }
+            return NULL;
+        }
         // TODO: implement these
         //case ATTACKING_TARGET_RANDOM_PLAYER:
         //case ATTACKING_TARGET_TOPAGGRO_PLAYER:
