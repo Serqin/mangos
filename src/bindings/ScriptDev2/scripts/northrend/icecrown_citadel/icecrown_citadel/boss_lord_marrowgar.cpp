@@ -121,7 +121,7 @@ struct MANGOS_DLL_DECL boss_lord_marrowgarAI : public ScriptedAI
 
 		if (uiBoneStrikeTimer < diff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM_PLAYER, 1))
 			{
 				if (DoCastSpellIfCan(pTarget, SPELL_BONE_STRIKE) == CAST_OK)
 				{
